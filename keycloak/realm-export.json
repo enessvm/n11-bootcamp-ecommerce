@@ -1,0 +1,111 @@
+{
+  "realm": "ecommerce",
+  "displayName": "E-Commerce Platform",
+  "enabled": true,
+
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "verifyEmail": false,
+  "rememberMe": false,
+  "editUsernameAllowed": false,
+
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+
+  "roles": {
+    "realm": [
+      {
+        "name": "USER",
+        "description": "Standard authenticated end user."
+      },
+      {
+        "name": "ADMIN",
+        "description": "Platform administrator."
+      }
+    ]
+  },
+
+  "defaultRole": {
+    "name": "default-roles-ecommerce",
+    "description": "Roles assigned to every new user.",
+    "composite": true,
+    "composites": {
+      "realm": ["USER"],
+      "client": {
+        "account": ["view-profile", "manage-account"]
+      }
+    },
+    "clientRole": false,
+    "containerId": "ecommerce"
+  },
+
+  "clients": [
+    {
+      "clientId": "ecommerce-web",
+      "name": "E-Commerce Web Frontend",
+      "description": "",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "fullScopeAllowed": true
+    }
+  ],
+
+  "users": [
+    {
+      "username": "enes",
+      "createdTimestamp": 1735689600000,
+      "email": "enes@example.com",
+      "firstName": "Enes",
+      "lastName": "Sevim",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["USER"]
+    },
+    {
+      "username": "admin",
+      "createdTimestamp": 1735689600000,
+      "email": "admin@example.com",
+      "firstName": "Admin",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["USER", "ADMIN"]
+    }
+  ]
+}
