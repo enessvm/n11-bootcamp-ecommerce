@@ -1,0 +1,13 @@
+# Defaults applied to all services. Per-service overrides go in
+# Per-service + profile overrides go in {service-name}-{profile}.yml.
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
