@@ -1,6 +1,10 @@
 package com.n11.bootcamp.ecommerce.product.entity;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +19,11 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class Money {
 
+    @NotNull
+    @DecimalMin(value = "0.00", inclusive = true)
     private BigDecimal amount;
+
+    @NotBlank
+    @Size(min = 3, max = 3)
     private String currency;
 }
