@@ -29,6 +29,7 @@
         <module>common/web</module>
         <module>common/events</module>
         <module>services/product-service</module>
+        <module>services/stock-service</module>
     </modules>
 
     <dependencyManagement>
