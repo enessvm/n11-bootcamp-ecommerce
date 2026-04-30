@@ -7,6 +7,8 @@ import com.n11.bootcamp.ecommerce.product.dto.ProductResponse;
 import com.n11.bootcamp.ecommerce.product.dto.UpdateProductRequest;
 import com.n11.bootcamp.ecommerce.product.entity.Category;
 import com.n11.bootcamp.ecommerce.product.entity.Product;
+import com.n11.bootcamp.ecommerce.product.event.ProductEventPublisher;
+import com.n11.bootcamp.ecommerce.product.mapper.ProductEventMapper;
 import com.n11.bootcamp.ecommerce.product.mapper.ProductMapper;
 import com.n11.bootcamp.ecommerce.product.repository.CategoryRepository;
 import com.n11.bootcamp.ecommerce.product.repository.ProductRepository;
@@ -25,6 +27,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
+    private final ProductEventMapper productEventMapper;
+    private final ProductEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -33,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
         Product entity = productMapper.toEntity(request, category);
         Product saved = productRepository.save(entity);
 
+        eventPublisher.publishCreated(productEventMapper.toCreatedEvent(saved));
         return productMapper.toResponse(saved);
     }
 
@@ -43,7 +48,6 @@ public class ProductServiceImpl implements ProductService {
         Category category = loadCategory(request.categoryId());
         productMapper.updateEntity(existing, request, category);
 
-        // TODO: publish ProductUpdated event
         return productMapper.toResponse(existing);
     }
 
@@ -52,7 +56,6 @@ public class ProductServiceImpl implements ProductService {
     public void softDelete(Long id) {
         Product existing = loadProductOrThrow(id);
         existing.setDeleted(true);
-        // TODO: publish ProductDeleted event
     }
 
     @Override

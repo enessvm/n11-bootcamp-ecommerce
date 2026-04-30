@@ -54,13 +54,13 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
         <dependency>
@@ -88,6 +88,11 @@
         <dependency>
             <groupId>com.n11.bootcamp.ecommerce</groupId>
             <artifactId>ecommerce-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.n11.bootcamp.ecommerce</groupId>
+            <artifactId>ecommerce-events</artifactId>
         </dependency>
     </dependencies>
 
