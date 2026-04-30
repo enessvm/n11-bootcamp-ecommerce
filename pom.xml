@@ -26,6 +26,7 @@
         <module>api-gateway</module>
         <module>common/persistence</module>
         <module>common/security</module>
+        <module>common/web</module>
         <module>services/product-service</module>
     </modules>
 
@@ -46,6 +47,11 @@
             <dependency>
                 <groupId>com.n11.bootcamp.ecommerce</groupId>
                 <artifactId>ecommerce-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.n11.bootcamp.ecommerce</groupId>
+                <artifactId>ecommerce-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
