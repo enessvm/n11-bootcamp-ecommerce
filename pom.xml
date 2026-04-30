@@ -27,6 +27,7 @@
         <module>common/persistence</module>
         <module>common/security</module>
         <module>common/web</module>
+        <module>common/events</module>
         <module>services/product-service</module>
     </modules>
 
@@ -52,6 +53,11 @@
             <dependency>
                 <groupId>com.n11.bootcamp.ecommerce</groupId>
                 <artifactId>ecommerce-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.n11.bootcamp.ecommerce</groupId>
+                <artifactId>ecommerce-events</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
