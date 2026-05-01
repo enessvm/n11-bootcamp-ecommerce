@@ -1,6 +1,7 @@
 package com.n11.bootcamp.ecommerce.order.event;
 
 import com.n11.bootcamp.ecommerce.events.RoutingKeys;
+import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
 import com.n11.bootcamp.ecommerce.events.stock.ReserveStockCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,4 +27,15 @@ public class SagaEventPublisher {
         log.info("Published ReserveStockCommand sagaId={} orderId={}",
                 command.sagaId(), command.orderId());
     }
+
+    public void publishApplyPromotion(ApplyPromotionCommand command) {
+        rabbitTemplate.convertAndSend(
+                RoutingKeys.EXCHANGE_PROMOTION_COMMANDS,
+                RoutingKeys.PROMOTION_APPLY,
+                command
+        );
+        log.info("Published ApplyPromotionCommand sagaId={} orderId={} code={}",
+                command.sagaId(), command.orderId(), command.code());
+    }
+
 }

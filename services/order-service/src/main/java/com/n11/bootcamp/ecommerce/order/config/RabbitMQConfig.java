@@ -22,18 +22,14 @@ public class RabbitMQConfig {
 
     // ---- Queue + exchange + DLQ names ----
 
-    public static final String QUEUE_STOCK_REPLIES     = "order-service.stock.events";
-    public static final String DLX_NAME                = "order-service.dlx";
-    public static final String DLQ_STOCK_REPLIES       = "order-service.stock.events.dlq";
+    public static final String QUEUE_STOCK_REPLIES         = "order-service.stock.events";
+    public static final String QUEUE_PROMOTION_REPLIES     = "order-service.promotion.events";
+    public static final String DLX_NAME                    = "order-service.dlx";
+    public static final String DLQ_STOCK_REPLIES           = "order-service.stock.events.dlq";
+    public static final String DLQ_PROMOTION_REPLIES       = "order-service.promotion.events.dlq";
 
-    // ---- Outbound ----
 
-    @Bean
-    public TopicExchange stockCommandsExchange() {
-        return new TopicExchange(RoutingKeys.EXCHANGE_STOCK_COMMANDS, true, false);
-    }
-
-    // ---- Inbound ----
+    // ---- Inbound: stock.events ----
 
     @Bean
     public TopicExchange stockEventsExchange() {
@@ -62,6 +58,51 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(stockRepliesQueue)
                 .to(stockEventsExchange)
                 .with(RoutingKeys.STOCK_RESERVATION_FAILED);
+    }
+
+    // ---- Outbound: stock.commands ----
+
+    @Bean
+    public TopicExchange stockCommandsExchange() {
+        return new TopicExchange(RoutingKeys.EXCHANGE_STOCK_COMMANDS, true, false);
+    }
+
+    // ---- Inbound: promotion.events ----
+
+    @Bean
+    public TopicExchange promotionEventsExchange() {
+        return new TopicExchange(RoutingKeys.EXCHANGE_PROMOTION_EVENTS, true, false);
+    }
+
+    @Bean
+    public Queue promotionRepliesQueue() {
+        return QueueBuilder.durable(QUEUE_PROMOTION_REPLIES)
+                .withArgument("x-dead-letter-exchange", DLX_NAME)
+                .withArgument("x-dead-letter-routing-key", QUEUE_PROMOTION_REPLIES)
+                .build();
+    }
+
+    @Bean
+    public Binding promotionAppliedBinding(Queue promotionRepliesQueue,
+                                           TopicExchange promotionEventsExchange) {
+        return BindingBuilder.bind(promotionRepliesQueue)
+                .to(promotionEventsExchange)
+                .with(RoutingKeys.PROMOTION_APPLIED);
+    }
+
+    @Bean
+    public Binding promotionApplicationFailedBinding(Queue promotionRepliesQueue,
+                                                     TopicExchange promotionEventsExchange) {
+        return BindingBuilder.bind(promotionRepliesQueue)
+                .to(promotionEventsExchange)
+                .with(RoutingKeys.PROMOTION_FAILED);
+    }
+
+    // ---- Outbound: promotion.commands ----
+
+    @Bean
+    public TopicExchange promotionCommandsExchange() {
+        return new TopicExchange(RoutingKeys.EXCHANGE_PROMOTION_COMMANDS, true, false);
     }
 
     // ---- DLX + DLQ ----

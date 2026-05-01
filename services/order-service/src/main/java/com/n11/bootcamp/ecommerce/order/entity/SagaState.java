@@ -4,6 +4,8 @@ public enum SagaState {
     INITIATED,
     STOCK_RESERVED,
     STOCK_FAILED,
+    PROMOTION_APPLIED,
+    PROMOTION_FAILED,
     COMPLETED,
     FAILED
 }
