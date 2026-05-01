@@ -1,62 +1,77 @@
 package com.n11.bootcamp.ecommerce.promotion.service.impl;
 
+import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
 import com.n11.bootcamp.ecommerce.promotion.dto.CreatePromotionRequest;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionResponse;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionValidationResponse;
 import com.n11.bootcamp.ecommerce.promotion.dto.UpdatePromotionRequest;
 import com.n11.bootcamp.ecommerce.promotion.dto.ValidationFailure;
+import com.n11.bootcamp.ecommerce.promotion.entity.Money;
 import com.n11.bootcamp.ecommerce.promotion.entity.Promotion;
+import com.n11.bootcamp.ecommerce.promotion.entity.PromotionRedemption;
+import com.n11.bootcamp.ecommerce.promotion.event.PromotionEventPublisher;
 import com.n11.bootcamp.ecommerce.promotion.exception.DuplicatePromotionCodeException;
 import com.n11.bootcamp.ecommerce.promotion.exception.PromotionNotFoundException;
 import com.n11.bootcamp.ecommerce.promotion.mapper.PromotionMapper;
+import com.n11.bootcamp.ecommerce.promotion.repository.PromotionRedemptionRepository;
 import com.n11.bootcamp.ecommerce.promotion.repository.PromotionRepository;
 import com.n11.bootcamp.ecommerce.promotion.service.PromotionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PromotionServiceImpl implements PromotionService {
 
     private final PromotionRepository promotionRepository;
+    private final PromotionRedemptionRepository redemptionRepository;
     private final PromotionMapper promotionMapper;
+    private final PromotionEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public PromotionResponse create(CreatePromotionRequest request) {
-        String normalizedCode = request.code().toUpperCase();
-        if (promotionRepository.existsByCode(normalizedCode)) {
-            throw new DuplicatePromotionCodeException(normalizedCode);
+        String code = request.code().toUpperCase();
+        if (promotionRepository.existsByCode(code)) {
+            throw new DuplicatePromotionCodeException(code);
         }
-
         Promotion promotion = promotionMapper.toEntity(request);
-        Promotion saved = promotionRepository.save(promotion);
-        return promotionMapper.toResponse(saved);
+        promotion.setCode(code);
+        return promotionMapper.toResponse(promotionRepository.save(promotion));
     }
 
     @Override
     @Transactional
     public PromotionResponse update(Long id, UpdatePromotionRequest request) {
-        Promotion existing = loadOrThrow(id);
-        promotionMapper.updateEntity(existing, request);
-        return promotionMapper.toResponse(existing);
+        Promotion promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new PromotionNotFoundException(id));
+        promotionMapper.updateEntity(promotion, request);
+        return promotionMapper.toResponse(promotion);
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-        Promotion existing = loadOrThrow(id);
-        promotionRepository.delete(existing);
+        Promotion promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new PromotionNotFoundException(id));
+        promotionRepository.delete(promotion);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PromotionResponse getById(Long id) {
-        return promotionMapper.toResponse(loadOrThrow(id));
+        Promotion promotion = promotionRepository.findById(id)
+                .orElseThrow(() -> new PromotionNotFoundException(id));
+        return promotionMapper.toResponse(promotion);
     }
 
     @Override
@@ -69,34 +84,131 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     @Transactional(readOnly = true)
-    public PromotionValidationResponse validate(String code) {
-        String normalizedCode = code.toUpperCase();
-        Promotion promotion = promotionRepository.findByCode(normalizedCode).orElse(null);
+    public PromotionValidationResponse validate(String code,
+                                                BigDecimal cartTotal,
+                                                String currency) {
+        String normalized = code.toUpperCase();
+        Promotion promotion = promotionRepository.findByCode(normalized).orElse(null);
 
         if (promotion == null) {
-            return PromotionValidationResponse.invalid(normalizedCode, ValidationFailure.NOT_FOUND);
+            return promotionMapper.toInvalidResponse(normalized, ValidationFailure.NOT_FOUND);
         }
 
-        Instant now = Instant.now();
-
-        if (!promotion.isActive()) {
-            return PromotionValidationResponse.invalid(normalizedCode, ValidationFailure.INACTIVE);
+        Optional<ValidationFailure> failure = checkAvailability(promotion, cartTotal);
+        if (failure.isPresent()) {
+            return promotionMapper.toInvalidResponse(normalized, failure.get());
         }
-        if (now.isBefore(promotion.getValidFrom())) {
-            return PromotionValidationResponse.invalid(normalizedCode, ValidationFailure.NOT_YET_VALID);
-        }
-        if (now.isAfter(promotion.getValidUntil())) {
-            return PromotionValidationResponse.invalid(normalizedCode, ValidationFailure.EXPIRED);
-        }
-        if (promotion.getMaxUses() != null && promotion.getTimesRedeemed() >= promotion.getMaxUses()) {
-            return PromotionValidationResponse.invalid(normalizedCode, ValidationFailure.MAX_USES_REACHED);
-        }
-
-        return promotionMapper.toValidationResponse(promotion);
+        return promotionMapper.toValidResponse(promotion);
     }
 
-    private Promotion loadOrThrow(Long id) {
-        return promotionRepository.findById(id)
-                .orElseThrow(() -> new PromotionNotFoundException(id));
+
+    // ---- Saga  consumer ----
+    @Override
+    @Transactional
+    public void consumeApplyCommand(ApplyPromotionCommand command) {
+        // 1. Existing redemption redelivery, replay and return.
+        Optional<PromotionRedemption> existing =
+                redemptionRepository.findBySagaId(command.sagaId());
+
+        if (existing.isPresent()) {
+            PromotionRedemption row = existing.get();
+            Promotion promotion = promotionRepository.findById(row.getPromotionId())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Redemption references missing promotion id=" + row.getPromotionId()));
+
+            log.info("Replaying redemption sagaId={} code={} discount={}",
+                    command.sagaId(), promotion.getCode(),
+                    row.getCartDiscount().getAmount());
+
+            eventPublisher.publishApplied(
+                    command.sagaId(),
+                    promotion.getId(),
+                    promotion.getCode(),
+                    row.getCartDiscount().getAmount(),
+                    row.getCartDiscount().getCurrency()
+            );
+            return;
+        }
+
+        // 2. Validate availability.
+        Promotion promotion = promotionRepository.findByCode(command.code()).orElse(null);
+        if (promotion == null) {
+            log.info("Apply rejected sagaId={} code={} reason=NOT_FOUND",
+                    command.sagaId(), command.code());
+            eventPublisher.publishApplicationFailed(command.sagaId(), ValidationFailure.NOT_FOUND);
+            return;
+        }
+
+        Optional<ValidationFailure> failure = checkAvailability(promotion, command.cartTotal());
+        if (failure.isPresent()) {
+            log.info("Apply rejected sagaId={} code={} reason={}",
+                    command.sagaId(), command.code(), failure.get());
+            eventPublisher.publishApplicationFailed(command.sagaId(), failure.get());
+            return;
+        }
+
+        // 3. Atomic claim. Returns 0 if max_uses reached or promotion was deactivated
+        int updated = promotionRepository.tryIncrementTimesRedeemed(promotion.getId());
+        if (updated == 0) {
+            log.info("Apply rejected sagaId={} code={} — max_uses reached",
+                    command.sagaId(), command.code());
+            eventPublisher.publishApplicationFailed(
+                    command.sagaId(), ValidationFailure.MAX_USES_REACHED);
+            return;
+        }
+
+        // 4. Compute discount, persist redemption snapshot.
+        BigDecimal discount = computeDiscount(promotion, command.cartTotal());
+
+        PromotionRedemption redemption = new PromotionRedemption();
+        redemption.setSagaId(command.sagaId());
+        redemption.setPromotionId(promotion.getId());
+        redemption.setCartDiscount(new Money(discount, command.currency()));
+        redemptionRepository.save(redemption);
+
+        log.info("Apply succeeded sagaId={} code={} discount={} {}",
+                command.sagaId(), promotion.getCode(), discount, command.currency());
+
+        eventPublisher.publishApplied(
+                command.sagaId(),
+                promotion.getId(),
+                promotion.getCode(),
+                discount,
+                command.currency()
+        );
+    }
+
+    // ---- helpers ----
+    private Optional<ValidationFailure> checkAvailability(Promotion p, BigDecimal cartTotal) {
+        if (!p.isActive()) {
+            return Optional.of(ValidationFailure.INACTIVE);
+        }
+        Instant now = Instant.now();
+        if (now.isBefore(p.getValidFrom())) {
+            return Optional.of(ValidationFailure.NOT_YET_VALID);
+        }
+        if (now.isAfter(p.getValidUntil())) {
+            return Optional.of(ValidationFailure.EXPIRED);
+        }
+        if (p.getMaxUses() != null && p.getTimesRedeemed() >= p.getMaxUses()) {
+            return Optional.of(ValidationFailure.MAX_USES_REACHED);
+        }
+        if (p.getMinCartTotal() != null && cartTotal.compareTo(p.getMinCartTotal()) < 0) {
+            return Optional.of(ValidationFailure.CART_BELOW_MINIMUM);
+        }
+        return Optional.empty();
+    }
+
+    private BigDecimal computeDiscount(Promotion promotion, BigDecimal cartTotal) {
+        return switch (promotion.getDiscountType()) {
+            case PERCENTAGE -> cartTotal
+                    .multiply(promotion.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            case FIXED_AMOUNT -> {
+                // Discount can't exceed cart total.
+                BigDecimal value = promotion.getDiscountValue();
+                yield value.compareTo(cartTotal) > 0 ? cartTotal : value;
+            }
+        };
     }
 }

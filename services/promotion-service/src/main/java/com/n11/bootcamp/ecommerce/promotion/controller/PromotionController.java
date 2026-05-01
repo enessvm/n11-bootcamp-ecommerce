@@ -1,9 +1,6 @@
 package com.n11.bootcamp.ecommerce.promotion.controller;
 
-import com.n11.bootcamp.ecommerce.promotion.dto.CreatePromotionRequest;
-import com.n11.bootcamp.ecommerce.promotion.dto.PromotionResponse;
-import com.n11.bootcamp.ecommerce.promotion.dto.PromotionValidationResponse;
-import com.n11.bootcamp.ecommerce.promotion.dto.UpdatePromotionRequest;
+import com.n11.bootcamp.ecommerce.promotion.dto.*;
 import com.n11.bootcamp.ecommerce.promotion.service.PromotionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,8 +57,8 @@ public class PromotionController {
         return promotionService.listAll();
     }
 
-    @GetMapping("/promotions/validate/{code}")
-    public PromotionValidationResponse validate(@PathVariable String code) {
-        return promotionService.validate(code);
+    @PostMapping("/promotions/validate")
+    public PromotionValidationResponse validate(@Valid @RequestBody PromotionValidationRequest request) {
+        return promotionService.validate(request.code(), request.cartTotal(), request.currency());
     }
 }

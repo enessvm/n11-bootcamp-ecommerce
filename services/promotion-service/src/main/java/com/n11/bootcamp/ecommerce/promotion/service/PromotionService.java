@@ -1,10 +1,12 @@
 package com.n11.bootcamp.ecommerce.promotion.service;
 
+import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
 import com.n11.bootcamp.ecommerce.promotion.dto.CreatePromotionRequest;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionResponse;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionValidationResponse;
 import com.n11.bootcamp.ecommerce.promotion.dto.UpdatePromotionRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface PromotionService {
@@ -19,5 +21,7 @@ public interface PromotionService {
 
     List<PromotionResponse> listAll();
 
-    PromotionValidationResponse validate(String code);
+    PromotionValidationResponse validate(String code, BigDecimal cartTotal, String currency);
+
+    void consumeApplyCommand(ApplyPromotionCommand command);
 }

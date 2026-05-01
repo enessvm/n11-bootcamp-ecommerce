@@ -1,9 +1,6 @@
 package com.n11.bootcamp.ecommerce.promotion.mapper;
 
-import com.n11.bootcamp.ecommerce.promotion.dto.CreatePromotionRequest;
-import com.n11.bootcamp.ecommerce.promotion.dto.PromotionResponse;
-import com.n11.bootcamp.ecommerce.promotion.dto.PromotionValidationResponse;
-import com.n11.bootcamp.ecommerce.promotion.dto.UpdatePromotionRequest;
+import com.n11.bootcamp.ecommerce.promotion.dto.*;
 import com.n11.bootcamp.ecommerce.promotion.entity.Promotion;
 import org.springframework.stereotype.Component;
 
@@ -56,7 +53,7 @@ public class PromotionMapper {
         );
     }
 
-    public PromotionValidationResponse toValidationResponse(Promotion p) {
+    public PromotionValidationResponse toValidResponse(Promotion p) {
         return PromotionValidationResponse.valid(
                 p.getCode(),
                 p.getDiscountType(),
@@ -64,5 +61,9 @@ public class PromotionMapper {
                 p.getScope(),
                 p.getMinCartTotal()
         );
+    }
+
+    public PromotionValidationResponse toInvalidResponse(String code, ValidationFailure reason) {
+        return PromotionValidationResponse.invalid(code, reason);
     }
 }

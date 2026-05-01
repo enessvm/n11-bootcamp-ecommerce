@@ -5,5 +5,6 @@ public enum ValidationFailure {
     INACTIVE,
     NOT_YET_VALID,
     EXPIRED,
-    MAX_USES_REACHED
+    MAX_USES_REACHED,
+    CART_BELOW_MINIMUM
 }
