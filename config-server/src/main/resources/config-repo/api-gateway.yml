@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   cloud:
@@ -14,12 +14,29 @@ spring:
               uri: lb://product-service
               predicates:
                 - Path=/products/**,/categories/**
+            - id: stock-service
+              uri: lb://stock-service
+              predicates:
+                - Path=/stock/**
+                - Method=PUT
+            - id: order-service
+              uri: lb://order-service
+              predicates:
+                - Path=/orders/**
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/users/**
+            - id: promotion-service
+              uri: lb://promotion-service
+              predicates:
+                - Path=/promotions/**
 
           globalcors:
             cors-configurations:
               '[/**]':
                 allowed-origins:
-                  - http://localhost:5173
+                  - ${FRONTEND_ORIGIN:http://localhost:5173}
                 allowed-methods:
                   - GET
                   - POST
