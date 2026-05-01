@@ -32,5 +32,5 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
           AND a.id <> :excludeId
           AND a.isDefault = true
         """)
-    int clearDefaultsExcept(@Param("sub") UUID keycloakSub, @Param("excludeId") Long excludeId);
+    void clearDefaultsExcept(@Param("sub") UUID keycloakSub, @Param("excludeId") Long excludeId);
 }

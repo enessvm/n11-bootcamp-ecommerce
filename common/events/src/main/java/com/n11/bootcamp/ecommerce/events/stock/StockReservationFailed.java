@@ -1,7 +1,6 @@
 package com.n11.bootcamp.ecommerce.events.stock;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 /**

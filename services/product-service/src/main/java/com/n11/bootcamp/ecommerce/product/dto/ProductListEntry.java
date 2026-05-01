@@ -2,7 +2,6 @@ package com.n11.bootcamp.ecommerce.product.dto;
 
 import com.n11.bootcamp.ecommerce.product.entity.Money;
 
-import java.math.BigDecimal;
 
 public record ProductListEntry(
         Long id,

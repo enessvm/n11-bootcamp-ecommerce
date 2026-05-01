@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 public class Money {
 
     @NotNull
-    @DecimalMin(value = "0.00", inclusive = true)
+    @DecimalMin(value = "0.00")
     private BigDecimal amount;
 
     @NotBlank
