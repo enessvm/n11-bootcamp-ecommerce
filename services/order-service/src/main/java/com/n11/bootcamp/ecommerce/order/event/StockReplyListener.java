@@ -1,7 +1,6 @@
 package com.n11.bootcamp.ecommerce.order.event;
 
-import com.n11.bootcamp.ecommerce.events.stock.StockReservationFailed;
-import com.n11.bootcamp.ecommerce.events.stock.StockReserved;
+import com.n11.bootcamp.ecommerce.events.stock.*;
 import com.n11.bootcamp.ecommerce.order.config.RabbitMQConfig;
 import com.n11.bootcamp.ecommerce.order.service.SagaService;
 import lombok.RequiredArgsConstructor;
@@ -33,5 +32,23 @@ public class StockReplyListener {
         log.info("Received StockReservationFailed sagaId={} reason={}",
                 event.sagaId(), event.reason());
         sagaService.onStockReservationFailed(event);
+    }
+
+    @RabbitHandler
+    public void onStockCommitted(StockCommitted event) {
+        log.info("Received StockCommitted sagaId={}", event.sagaId());
+        sagaService.onStockCommitted(event);
+    }
+
+    @RabbitHandler
+    public void onStockCommitFailed(StockCommitFailed event) {
+        log.info("Received StockCommitFailed sagaId={}", event.sagaId());
+        sagaService.onStockCommitFailed(event);
+    }
+
+    @RabbitHandler
+    public void onStockReleased(StockReleased event) {
+        log.info("Received StockReleased sagaId={}", event.sagaId());
+        sagaService.onStockReleased(event);
     }
 }

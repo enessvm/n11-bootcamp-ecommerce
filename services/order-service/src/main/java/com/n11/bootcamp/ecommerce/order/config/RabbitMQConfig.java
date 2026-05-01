@@ -60,12 +60,37 @@ public class RabbitMQConfig {
                 .with(RoutingKeys.STOCK_RESERVATION_FAILED);
     }
 
+    @Bean
+    public Binding stockCommittedBinding(Queue stockRepliesQueue,
+                                         TopicExchange stockEventsExchange) {
+        return BindingBuilder.bind(stockRepliesQueue)
+                .to(stockEventsExchange)
+                .with(RoutingKeys.STOCK_COMMITTED);
+    }
+
+    @Bean
+    public Binding stockCommitFailedBinding(Queue stockRepliesQueue,
+                                            TopicExchange stockEventsExchange) {
+        return BindingBuilder.bind(stockRepliesQueue)
+                .to(stockEventsExchange)
+                .with(RoutingKeys.STOCK_COMMIT_FAILED);
+    }
+
+    @Bean
+    public Binding stockReleasedBinding(Queue stockRepliesQueue,
+                                        TopicExchange stockEventsExchange) {
+        return BindingBuilder.bind(stockRepliesQueue)
+                .to(stockEventsExchange)
+                .with(RoutingKeys.STOCK_RELEASED);
+    }
+
     // ---- Outbound: stock.commands ----
 
     @Bean
     public TopicExchange stockCommandsExchange() {
         return new TopicExchange(RoutingKeys.EXCHANGE_STOCK_COMMANDS, true, false);
     }
+
 
     // ---- Inbound: promotion.events ----
 
@@ -105,7 +130,7 @@ public class RabbitMQConfig {
         return new TopicExchange(RoutingKeys.EXCHANGE_PROMOTION_COMMANDS, true, false);
     }
 
-    // ---- DLX + DLQ ----
+    // ---- DLX + DLQs ----
 
     @Bean
     public TopicExchange orderServiceDlx() {
@@ -123,6 +148,19 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(stockRepliesDlq)
                 .to(orderServiceDlx)
                 .with(QUEUE_STOCK_REPLIES);
+    }
+
+    @Bean
+    public Queue promotionRepliesDlq() {
+        return QueueBuilder.durable(DLQ_PROMOTION_REPLIES).build();
+    }
+
+    @Bean
+    public Binding promotionRepliesDlqBinding(Queue promotionRepliesDlq,
+                                              TopicExchange orderServiceDlx) {
+        return BindingBuilder.bind(promotionRepliesDlq)
+                .to(orderServiceDlx)
+                .with(QUEUE_PROMOTION_REPLIES);
     }
 
     // ---- JSON message conversion ----

@@ -12,7 +12,6 @@ import com.n11.bootcamp.ecommerce.order.exception.OrderNotFoundException;
 import com.n11.bootcamp.ecommerce.order.mapper.OrderMapper;
 import com.n11.bootcamp.ecommerce.order.repository.OrderRepository;
 import com.n11.bootcamp.ecommerce.order.service.OrderService;
-import com.n11.bootcamp.ecommerce.order.service.SagaService;
 import com.n11.bootcamp.ecommerce.web.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final ProductServiceClient productServiceClient;
-    private final SagaService sagaService;
+    private final SagaServiceImpl sagaService;
 
     @Override
     @Transactional
