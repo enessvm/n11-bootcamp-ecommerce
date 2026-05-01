@@ -3,6 +3,7 @@ package com.n11.bootcamp.ecommerce.stock.config;
 import com.n11.bootcamp.ecommerce.security.SecurityDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -19,7 +20,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
 
                         // Internal Feign endpoint
-                        .requestMatchers("/stock/batch").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/stock/batch").permitAll()
 
                         // Anything else
                         .anyRequest().authenticated())
