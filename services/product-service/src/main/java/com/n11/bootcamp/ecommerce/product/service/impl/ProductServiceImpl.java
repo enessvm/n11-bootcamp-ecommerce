@@ -1,10 +1,10 @@
 package com.n11.bootcamp.ecommerce.product.service.impl;
 
-import com.n11.bootcamp.ecommerce.product.dto.BatchProductsRequest;
-import com.n11.bootcamp.ecommerce.product.dto.CreateProductRequest;
-import com.n11.bootcamp.ecommerce.product.dto.ProductBatchResponse;
-import com.n11.bootcamp.ecommerce.product.dto.ProductResponse;
-import com.n11.bootcamp.ecommerce.product.dto.UpdateProductRequest;
+import com.n11.bootcamp.ecommerce.product.client.StockServiceClient;
+import com.n11.bootcamp.ecommerce.product.client.dto.StockBatchRequest;
+import com.n11.bootcamp.ecommerce.product.client.dto.StockBatchResponse;
+import com.n11.bootcamp.ecommerce.product.client.dto.StockStatus;
+import com.n11.bootcamp.ecommerce.product.dto.*;
 import com.n11.bootcamp.ecommerce.product.entity.Category;
 import com.n11.bootcamp.ecommerce.product.entity.Product;
 import com.n11.bootcamp.ecommerce.product.event.ProductEventPublisher;
@@ -15,11 +15,13 @@ import com.n11.bootcamp.ecommerce.product.repository.ProductRepository;
 import com.n11.bootcamp.ecommerce.product.service.ProductService;
 import com.n11.bootcamp.ecommerce.web.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -29,6 +31,34 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ProductEventMapper productEventMapper;
     private final ProductEventPublisher eventPublisher;
+    private final StockServiceClient stockServiceClient;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductDetailResponse getById(Long id) {
+        Product product = loadProductOrThrow(id);
+
+        StockStatus stockStatus;
+        boolean stockUnavailable;
+
+        try {
+            StockBatchResponse response = stockServiceClient.batch(
+                    new StockBatchRequest(List.of(id)));
+
+            stockStatus = response.items().stream()
+                    .filter(item -> item.productId() == id)
+                    .findFirst()
+                    .map(StockBatchResponse.Item::status)
+                    .orElse(StockStatus.OUT_OF_STOCK); // responded but missing → OUT_OF_STOCK
+            stockUnavailable = false;
+        } catch (Exception e) {
+            log.warn("stock-service enrichment failed for productId={}, degrading", id, e);
+            stockStatus = null;
+            stockUnavailable = true;
+        }
+
+        return productMapper.toDetailResponse(product, stockStatus, stockUnavailable);
+    }
 
     @Override
     @Transactional

@@ -1,10 +1,6 @@
 package com.n11.bootcamp.ecommerce.product.service;
 
-import com.n11.bootcamp.ecommerce.product.dto.BatchProductsRequest;
-import com.n11.bootcamp.ecommerce.product.dto.CreateProductRequest;
-import com.n11.bootcamp.ecommerce.product.dto.ProductBatchResponse;
-import com.n11.bootcamp.ecommerce.product.dto.ProductResponse;
-import com.n11.bootcamp.ecommerce.product.dto.UpdateProductRequest;
+import com.n11.bootcamp.ecommerce.product.dto.*;
 
 public interface ProductService {
 
@@ -15,4 +11,6 @@ public interface ProductService {
     void softDelete(Long id);
 
     ProductBatchResponse batch(BatchProductsRequest request);
+
+    ProductDetailResponse getById(Long id);
 }
