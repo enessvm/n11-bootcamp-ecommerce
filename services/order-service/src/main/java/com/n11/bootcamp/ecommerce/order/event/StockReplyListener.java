@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@RabbitListener(queues = RabbitConfig.QUEUE_STOCK_REPLIES)
+@RabbitListener(queues = RabbitMQConfig.QUEUE_STOCK_REPLIES)
 public class StockReplyListener {
 
     private final SagaService sagaService;
