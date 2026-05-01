@@ -31,6 +31,7 @@
         <module>services/product-service</module>
         <module>services/stock-service</module>
         <module>services/user-service</module>
+        <module>services/promotion-service</module>
     </modules>
 
     <dependencyManagement>
