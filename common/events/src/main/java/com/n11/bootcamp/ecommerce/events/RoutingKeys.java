@@ -10,12 +10,18 @@ public final class RoutingKeys {
     // ---- Exchanges ----
     public static final String EXCHANGE_PRODUCT_EVENTS = "product.events";
     public static final String EXCHANGE_STOCK_EVENTS   = "stock.events";
+    public static final String EXCHANGE_STOCK_COMMANDS = "stock.commands";
     public static final String EXCHANGE_ORDER_EVENTS   = "order.events";
+
 
 
     // ---- product.events ----
     public static final String PRODUCT_CREATED = "product.created";
 
+
+
+    // ---- stock.commands ----
+    public static final String STOCK_RESERVE = "stock.commands.reserve";
 
     // ---- stock.events ----
     public static final String STOCK_RESERVED            = "stock.reserved";
