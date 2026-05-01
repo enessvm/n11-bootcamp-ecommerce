@@ -1,4 +1,4 @@
-package com.n11.bootcamp.ecommerce.product.client.dto;
+package com.n11.bootcamp.ecommerce.product.dto;
 
 public enum StockStatus {
     OUT_OF_STOCK,

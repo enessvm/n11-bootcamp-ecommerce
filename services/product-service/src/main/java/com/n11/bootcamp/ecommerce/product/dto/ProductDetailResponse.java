@@ -1,6 +1,5 @@
 package com.n11.bootcamp.ecommerce.product.dto;
 
-import com.n11.bootcamp.ecommerce.product.client.dto.StockStatus;
 import com.n11.bootcamp.ecommerce.product.entity.Money;
 
 import java.time.Instant;

@@ -1,6 +1,6 @@
 package com.n11.bootcamp.ecommerce.product.mapper;
 
-import com.n11.bootcamp.ecommerce.product.client.dto.StockStatus;
+import com.n11.bootcamp.ecommerce.product.dto.StockStatus;
 import com.n11.bootcamp.ecommerce.product.dto.*;
 import com.n11.bootcamp.ecommerce.product.entity.Category;
 import com.n11.bootcamp.ecommerce.product.entity.Product;
@@ -103,6 +103,20 @@ public class ProductMapper {
                 true
         );
     }
+    public ProductListEntry toListEntry(Product p,
+                                        StockStatus stockStatus) {
+        return new ProductListEntry(
+                p.getId(),
+                p.getName(),
+                p.getBrand(),
+                p.getCategory().getId(),
+                p.getPrimaryImageUrl(),
+                p.getListPrice(),
+                stockStatus
+        );
+    }
+
+
 
     private void applyAdditionalImages(Product product, List<String> urls) {
         // Keep the existing collection
