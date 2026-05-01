@@ -25,4 +25,18 @@ public class StockLevel extends Auditable {
 
     @Column(name = "reserved_quantity", nullable = false)
     private int reservedQuantity = 0;
+
+
+    public void decrement(int amount) {
+        if (availableQuantity < amount) {
+            throw new IllegalStateException(
+                    "Cannot decrement availableQuantity below zero: have=" + availableQuantity
+                            + ", requested=" + amount);
+        }
+        this.availableQuantity = availableQuantity - amount;
+    }
+
+    public void increment(int amount) {
+        this.availableQuantity = availableQuantity + amount;
+    }
 }

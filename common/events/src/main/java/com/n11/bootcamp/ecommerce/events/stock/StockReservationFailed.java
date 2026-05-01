@@ -5,8 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Reply event published by stock-service when a {@link ReserveStockCommand}
- * cannot be satisfied.
+ * Reply event published by stock-service when a {@link ReserveStockCommand} cannot be satisfied.
  *
  * <p>Routing key: {@code stock.reservation-failed}. Exchange: {@code stock.events}.
  */
@@ -16,21 +15,11 @@ public record StockReservationFailed(
         Instant occurredAt,
         UUID sagaId,
         Reason reason,
-        List<UnavailableItem> unavailableItems
+        long failedProductId
 ) {
 
     public enum Reason {
         INSUFFICIENT_STOCK,
         STOCK_NOT_FOUND
     }
-
-    /**
-     * One per offending item. Empty array when {@code reason = STOCK_NOT_FOUND}
-     * for items with no {@code stock_level} row at all.
-     */
-    public record UnavailableItem(
-            long productId,
-            int requested,
-            int available
-    ) {}
 }

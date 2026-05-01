@@ -24,13 +24,15 @@ public final class RoutingKeys {
 
     // ---- stock.commands ----
     public static final String STOCK_RESERVE = "stock.commands.reserve";
+    public static final String STOCK_COMMIT  = "stock.commands.commit";
+    public static final String STOCK_RELEASE = "stock.commands.release";
 
     // ---- stock.events ----
     public static final String STOCK_RESERVED            = "stock.reserved";
     public static final String STOCK_RESERVATION_FAILED  = "stock.reservation-failed";
     public static final String STOCK_COMMITTED           = "stock.committed";
+    public static final String STOCK_COMMIT_FAILED       = "stock.commit-failed";
     public static final String STOCK_RELEASED            = "stock.released";
-
 
 
 
