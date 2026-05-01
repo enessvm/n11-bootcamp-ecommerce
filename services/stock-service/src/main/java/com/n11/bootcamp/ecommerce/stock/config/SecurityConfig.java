@@ -22,6 +22,9 @@ public class SecurityConfig {
                         // Internal Feign endpoint
                         .requestMatchers(HttpMethod.POST, "/stock/batch").permitAll()
 
+                        // Admin writes
+                        .requestMatchers(HttpMethod.PUT,  "/stock/**").hasRole("ADMIN")
+
                         // Anything else
                         .anyRequest().authenticated())
                 .build();
