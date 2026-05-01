@@ -11,6 +11,8 @@ public final class RoutingKeys {
     public static final String EXCHANGE_PRODUCT_EVENTS = "product.events";
     public static final String EXCHANGE_STOCK_EVENTS   = "stock.events";
     public static final String EXCHANGE_STOCK_COMMANDS = "stock.commands";
+    public static final String EXCHANGE_PROMOTION_COMMANDS  = "promotion.commands";
+    public static final String EXCHANGE_PROMOTION_EVENTS    = "promotion.events";
     public static final String EXCHANGE_ORDER_EVENTS   = "order.events";
 
 
@@ -28,4 +30,14 @@ public final class RoutingKeys {
     public static final String STOCK_RESERVATION_FAILED  = "stock.reservation-failed";
     public static final String STOCK_COMMITTED           = "stock.committed";
     public static final String STOCK_RELEASED            = "stock.released";
+
+
+
+
+    // ---- promotion.commands ----
+    public static final String PROMOTION_APPLY = "promotion.commands.apply";
+
+    // ---- promotion.events ----
+    public static final String PROMOTION_APPLIED  = "promotion.applied";
+    public static final String PROMOTION_FAILED   = "promotion.failed";
 }
