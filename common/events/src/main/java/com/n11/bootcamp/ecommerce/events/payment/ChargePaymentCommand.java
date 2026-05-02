@@ -61,6 +61,7 @@ public record ChargePaymentCommand(
             String id,
             String name,
             String category,
-            BigDecimal price
+            BigDecimal price,
+            int quantity
     ) {}
 }

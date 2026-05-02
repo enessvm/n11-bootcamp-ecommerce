@@ -11,6 +11,8 @@ import com.iyzipay.request.CreateCheckoutFormInitializeRequest;
 import com.n11.bootcamp.ecommerce.events.payment.ChargePaymentCommand;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.IntStream;
+
 /**
  * Translates between platform types ({@link ChargePaymentCommand}) and
  * Iyzico SDK types. Keeps Iyzico-specific knowledge isolated.
@@ -43,9 +45,10 @@ public class IyzicoRequestMapper {
         request.setShippingAddress(toAddress(command.shippingAddress()));
         request.setBillingAddress(toAddress(command.billingAddress()));
 
-        // Line items already expanded by quantity (slice 1d-ii responsibility)
+        // Iyzico's BasketItem has no quantity field; emit one item per unit.
         request.setBasketItems(command.lineItems().stream()
-                .map(this::toBasketItem)
+                .flatMap(line -> IntStream.range(0, line.quantity())
+                        .mapToObj(i -> toBasketItem(line)))
                 .toList());
 
         return request;

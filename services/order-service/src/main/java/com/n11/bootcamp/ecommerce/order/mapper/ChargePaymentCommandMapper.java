@@ -8,16 +8,13 @@ import com.n11.bootcamp.ecommerce.order.entity.OrderLineItem;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Translates an Order into the Iyzico-shaped ChargePaymentCommand.
- *
- * <p>Single seam between order schema and payment schema. LineItems are
- * expanded by quantity (3 of product X = 3 LineItems) because Iyzico's
- * BasketItem has no quantity field.
+ * Translates an Order into the provider-neutral {@link ChargePaymentCommand}
+ * event. Single seam between order-service's domain entities and the public
+ * payment event contract. 
  */
 @Component
 public class ChargePaymentCommandMapper {
@@ -35,7 +32,7 @@ public class ChargePaymentCommandMapper {
                 toCustomer(order),
                 toCommandAddress(order.getShippingAddress()),
                 toCommandAddress(order.getBillingAddress()),
-                expandLineItems(order.getLineItems())
+                toLineItems(order.getLineItems())
         );
     }
 
@@ -69,19 +66,15 @@ public class ChargePaymentCommandMapper {
         return line1 + ", " + line2;
     }
 
-    private List<ChargePaymentCommand.LineItem> expandLineItems(List<OrderLineItem> lineItems) {
-        List<ChargePaymentCommand.LineItem> expanded = new ArrayList<>();
-        for (OrderLineItem line : lineItems) {
-            String itemId = String.valueOf(line.getProductId());
-            for (int i = 0; i < line.getQuantity(); i++) {
-                expanded.add(new ChargePaymentCommand.LineItem(
-                        itemId,
+    private List<ChargePaymentCommand.LineItem> toLineItems(List<OrderLineItem> lineItems) {
+        return lineItems.stream()
+                .map(line -> new ChargePaymentCommand.LineItem(
+                        String.valueOf(line.getProductId()),
                         line.getProductName(),
                         line.getCategoryName(),
-                        line.getUnitEffectivePrice().getAmount()
-                ));
-            }
-        }
-        return expanded;
+                        line.getUnitEffectivePrice().getAmount(),
+                        line.getQuantity()
+                ))
+                .toList();
     }
 }
