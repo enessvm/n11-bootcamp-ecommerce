@@ -3,6 +3,7 @@ package com.n11.bootcamp.ecommerce.promotion.event;
 import com.n11.bootcamp.ecommerce.events.RoutingKeys;
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionFailed;
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionApplied;
+import com.n11.bootcamp.ecommerce.events.promotion.PromotionReverted;
 import com.n11.bootcamp.ecommerce.promotion.dto.ValidationFailure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,22 @@ public class PromotionEventPublisher {
         );
         log.info("Published PromotionApplied sagaId={} code={} discount={} {}",
                 sagaId, code, cartDiscountAmount, currency);
+    }
+
+    public void publishReverted(UUID sagaId, Long promotionId, String code) {
+        PromotionReverted event = new PromotionReverted(
+                UUID.randomUUID(),
+                Instant.now(),
+                sagaId,
+                promotionId,
+                code
+        );
+        rabbitTemplate.convertAndSend(
+                RoutingKeys.EXCHANGE_PROMOTION_EVENTS,
+                RoutingKeys.PROMOTION_REVERTED,
+                event
+        );
+        log.info("Published PromotionReverted sagaId={} code={}", sagaId, code);
     }
 
     public void publishApplicationFailed(UUID sagaId, ValidationFailure reason) {

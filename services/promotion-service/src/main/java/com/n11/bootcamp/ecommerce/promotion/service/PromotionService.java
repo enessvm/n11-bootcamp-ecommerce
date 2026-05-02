@@ -1,6 +1,7 @@
 package com.n11.bootcamp.ecommerce.promotion.service;
 
 import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
+import com.n11.bootcamp.ecommerce.events.promotion.RevertPromotionCommand;
 import com.n11.bootcamp.ecommerce.promotion.dto.CreatePromotionRequest;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionResponse;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionValidationResponse;
@@ -24,4 +25,6 @@ public interface PromotionService {
     PromotionValidationResponse validate(String code, BigDecimal cartTotal, String currency);
 
     void consumeApplyCommand(ApplyPromotionCommand command);
+
+    void consumeRevertCommand(RevertPromotionCommand command);
 }

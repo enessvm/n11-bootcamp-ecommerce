@@ -31,4 +31,18 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
           AND (max_uses IS NULL OR times_redeemed < max_uses)
         """, nativeQuery = true)
     int tryIncrementTimesRedeemed(@Param("id") Long id);
+
+    /**
+     * Decrement for compensation. Returns 1 if the counter was decremented,
+     * 0 if it was already 0 (anomaly — caller should throw to DLQ).
+     * No active check — even deactivated promotions need their counter rolled back.
+     */
+    @Modifying
+    @Query(value = """
+        UPDATE promotion
+        SET times_redeemed = times_redeemed - 1
+        WHERE id = :id
+          AND times_redeemed > 0
+        """, nativeQuery = true)
+    int tryDecrementTimesRedeemed(@Param("id") Long id);
 }

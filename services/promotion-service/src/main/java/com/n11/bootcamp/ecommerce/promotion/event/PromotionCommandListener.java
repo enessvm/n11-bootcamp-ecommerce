@@ -1,6 +1,7 @@
 package com.n11.bootcamp.ecommerce.promotion.event;
 
 import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
+import com.n11.bootcamp.ecommerce.events.promotion.RevertPromotionCommand;
 import com.n11.bootcamp.ecommerce.promotion.config.RabbitMQConfig;
 import com.n11.bootcamp.ecommerce.promotion.service.PromotionService;
 import lombok.RequiredArgsConstructor;
@@ -26,5 +27,11 @@ public class PromotionCommandListener {
                 command.sagaId(), command.code(),
                 command.cartTotal(), command.currency());
         promotionService.consumeApplyCommand(command);
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_REVERT_COMMANDS)
+    public void onRevertPromotion(RevertPromotionCommand command) {
+        log.info("Received RevertPromotionCommand sagaId={}", command.sagaId());
+        promotionService.consumeRevertCommand(command);
     }
 }

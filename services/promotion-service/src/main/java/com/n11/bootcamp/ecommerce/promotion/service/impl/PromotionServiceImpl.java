@@ -1,6 +1,7 @@
 package com.n11.bootcamp.ecommerce.promotion.service.impl;
 
 import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
+import com.n11.bootcamp.ecommerce.events.promotion.RevertPromotionCommand;
 import com.n11.bootcamp.ecommerce.promotion.dto.CreatePromotionRequest;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionResponse;
 import com.n11.bootcamp.ecommerce.promotion.dto.PromotionValidationResponse;
@@ -176,6 +177,37 @@ public class PromotionServiceImpl implements PromotionService {
                 discount,
                 command.currency()
         );
+    }
+
+    @Override
+    @Transactional
+    public void consumeRevertCommand(RevertPromotionCommand command) {
+        // Idempotency / anomaly: the redemption row is the source of truth.
+        // If it's missing, this is either a duplicate revert (we already deleted it)
+        // or we never applied — both indistinguishable here, both go to DLQ for triage.
+        PromotionRedemption redemption = redemptionRepository.findBySagaId(command.sagaId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Revert: no redemption for sagaId=" + command.sagaId()
+                                + " — never applied or already reverted (DLQ for triage)"));
+
+        Promotion promotion = promotionRepository.findById(redemption.getPromotionId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Revert: redemption references missing promotion id="
+                                + redemption.getPromotionId()));
+
+        int updated = promotionRepository.tryDecrementTimesRedeemed(promotion.getId());
+        if (updated == 0) {
+            throw new IllegalStateException(
+                    "Revert: counter already 0 for promotion id=" + promotion.getId()
+                            + " sagaId=" + command.sagaId() + " (DLQ for triage)");
+        }
+
+        redemptionRepository.delete(redemption);
+
+        log.info("Revert succeeded sagaId={} code={} promotionId={}",
+                command.sagaId(), promotion.getCode(), promotion.getId());
+
+        eventPublisher.publishReverted(command.sagaId(), promotion.getId(), promotion.getCode());
     }
 
     // ---- helpers ----

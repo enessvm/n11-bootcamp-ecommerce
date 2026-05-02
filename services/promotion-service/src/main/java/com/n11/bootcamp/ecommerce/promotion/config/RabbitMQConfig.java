@@ -21,8 +21,10 @@ import org.springframework.context.annotation.Primary;
 public class RabbitMQConfig {
 
     public static final String QUEUE_APPLY_COMMANDS    = "promotion-service.apply-commands";
+    public static final String QUEUE_REVERT_COMMANDS   = "promotion-service.revert-commands";
     public static final String DLX_NAME                = "promotion-service.dlx";
     public static final String DLQ_APPLY_COMMANDS      = "promotion-service.apply-commands.dlq";
+    public static final String DLQ_REVERT_COMMANDS     = "promotion-service.revert-commands.dlq";
 
     // ---- Inbound: promotion.commands ----
 
@@ -45,6 +47,22 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(applyCommandsQueue)
                 .to(promotionCommandsExchange)
                 .with(RoutingKeys.PROMOTION_APPLY);
+    }
+
+    @Bean
+    public Queue revertCommandsQueue() {
+        return QueueBuilder.durable(QUEUE_REVERT_COMMANDS)
+                .withArgument("x-dead-letter-exchange", DLX_NAME)
+                .withArgument("x-dead-letter-routing-key", QUEUE_REVERT_COMMANDS)
+                .build();
+    }
+
+    @Bean
+    public Binding revertCommandsBinding(Queue revertCommandsQueue,
+                                         TopicExchange promotionCommandsExchange) {
+        return BindingBuilder.bind(revertCommandsQueue)
+                .to(promotionCommandsExchange)
+                .with(RoutingKeys.PROMOTION_REVERT);
     }
 
     // ---- Outbound: promotion.events ----
@@ -72,6 +90,19 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(applyCommandsDlq)
                 .to(promotionServiceDlx)
                 .with(QUEUE_APPLY_COMMANDS);
+    }
+
+    @Bean
+    public Queue revertCommandsDlq() {
+        return QueueBuilder.durable(DLQ_REVERT_COMMANDS).build();
+    }
+
+    @Bean
+    public Binding revertCommandsDlqBinding(Queue revertCommandsDlq,
+                                            TopicExchange promotionServiceDlx) {
+        return BindingBuilder.bind(revertCommandsDlq)
+                .to(promotionServiceDlx)
+                .with(QUEUE_REVERT_COMMANDS);
     }
 
     // ---- JSON message conversion ----

@@ -38,11 +38,13 @@ public final class RoutingKeys {
 
 
     // ---- promotion.commands ----
-    public static final String PROMOTION_APPLY = "promotion.commands.apply";
+    public static final String PROMOTION_APPLY  = "promotion.commands.apply";
+    public static final String PROMOTION_REVERT = "promotion.commands.revert";
 
     // ---- promotion.events ----
     public static final String PROMOTION_APPLIED  = "promotion.applied";
     public static final String PROMOTION_FAILED   = "promotion.failed";
+    public static final String PROMOTION_REVERTED = "promotion.reverted";
 
 
 
