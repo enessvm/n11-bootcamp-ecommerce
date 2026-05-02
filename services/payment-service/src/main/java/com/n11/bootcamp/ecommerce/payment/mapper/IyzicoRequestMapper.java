@@ -13,9 +13,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Translates between platform types ({@link ChargePaymentCommand}) and
- * Iyzico SDK types. Keeps Iyzico-specific knowledge isolated from
- * {@link com.n11.bootcamp.ecommerce.payment.gateway.IyzicoPaymentGateway}'s
- * API-call orchestration.
+ * Iyzico SDK types. Keeps Iyzico-specific knowledge isolated.
  */
 @Component
 public class IyzicoRequestMapper {
