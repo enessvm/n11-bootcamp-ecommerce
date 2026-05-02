@@ -69,6 +69,20 @@
         "post.logout.redirect.uris": "http://localhost:5173/*"
       },
       "fullScopeAllowed": true
+    },
+    {
+      "clientId": "user-service-admin",
+      "name": "User Service Admin Client",
+      "description": "Confidential client used by user-service to call the Keycloak Admin API for custom registration.",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "dev-user-service-admin-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false
     }
   ],
 
@@ -106,6 +120,14 @@
         }
       ],
       "realmRoles": ["USER", "ADMIN"]
+    },
+    {
+      "username": "service-account-user-service-admin",
+      "enabled": true,
+      "serviceAccountClientId": "user-service-admin",
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "query-users"]
+      }
     }
   ]
 }

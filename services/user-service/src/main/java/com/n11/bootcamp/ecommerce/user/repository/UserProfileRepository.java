@@ -21,4 +21,6 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, UUID> 
         ON CONFLICT (keycloak_sub) DO NOTHING
         """, nativeQuery = true)
     int insertIfAbsent(@Param("sub") UUID keycloakSub, @Param("now") Instant now);
+
+    boolean existsByIdentityNumber(String identityNumber);
 }

@@ -16,6 +16,10 @@ public class SecurityConfig {
         return SecurityDefaults.applyDefaults(http)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers(
+                                "/users/register",
+                                "/users/login",
+                                "/users/refresh").permitAll()
                         .requestMatchers("/users/me/**").authenticated()
                         .anyRequest().authenticated())
                 .build();
