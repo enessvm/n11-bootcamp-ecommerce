@@ -88,6 +88,23 @@ public class Order extends Auditable {
     private Address billingAddress;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "firstName",      column = @Column(name = "buyer_first_name")),
+            @AttributeOverride(name = "lastName",       column = @Column(name = "buyer_last_name")),
+            @AttributeOverride(name = "email",          column = @Column(name = "buyer_email")),
+            @AttributeOverride(name = "phoneNumber",    column = @Column(name = "buyer_phone_number")),
+            @AttributeOverride(name = "identityNumber", column = @Column(name = "buyer_identity_number")),
+            @AttributeOverride(name = "ipAddress",      column = @Column(name = "buyer_ip_address"))
+    })
+    private Buyer buyer;
+
+    @Column(name = "payment_provider", nullable = false)
+    private String paymentProvider;
+
+    @Column(name = "payment_page_url")
+    private String paymentPageUrl;
+
+    @Embedded
     @AttributeOverride(name = "amount",   column = @Column(name = "subtotal_amount"))
     @AttributeOverride(name = "currency", column = @Column(name = "subtotal_currency"))
     private Money subtotal;

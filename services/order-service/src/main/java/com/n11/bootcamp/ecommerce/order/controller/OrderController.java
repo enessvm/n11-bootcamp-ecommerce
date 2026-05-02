@@ -3,6 +3,8 @@ package com.n11.bootcamp.ecommerce.order.controller;
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequest;
 import com.n11.bootcamp.ecommerce.order.dto.OrderResponse;
 import com.n11.bootcamp.ecommerce.order.service.OrderService;
+import com.n11.bootcamp.ecommerce.order.util.ClientIpResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,8 +30,10 @@ public class OrderController {
 
     @PostMapping("/orders")
     public ResponseEntity<OrderResponse> create(@AuthenticationPrincipal Jwt jwt,
+                                                HttpServletRequest httpRequest,
                                                 @Valid @RequestBody CreateOrderRequest request) {
-        OrderResponse created = orderService.createOrder(sub(jwt), request);
+        String ipAddress = ClientIpResolver.resolve(httpRequest);
+        OrderResponse created = orderService.createOrder(jwt, ipAddress, request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(created.id())

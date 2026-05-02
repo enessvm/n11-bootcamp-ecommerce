@@ -21,5 +21,8 @@ public record OrderResponse(
         Money total,
         List<OrderLineItemResponse> lineItems,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        BuyerResponse buyer,
+        String paymentProvider,
+        String paymentPageUrl
 ) {}

@@ -1,6 +1,7 @@
 package com.n11.bootcamp.ecommerce.order.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -19,5 +20,8 @@ public record CreateOrderRequest(
         AddressRequest shippingAddress,
 
         @NotNull @Valid
-        AddressRequest billingAddress
+        AddressRequest billingAddress,
+
+        @NotBlank @Size(max = 50)
+        String paymentProvider
 ) {}

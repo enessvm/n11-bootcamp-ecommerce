@@ -7,6 +7,7 @@ public record OrderLineItemResponse(
         Long productId,
         String productName,
         String productBrand,
+        String categoryName,
         String primaryImageUrl,
         int quantity,
         Money unitListPrice,

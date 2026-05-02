@@ -24,9 +24,11 @@ public class RabbitMQConfig {
 
     public static final String QUEUE_STOCK_REPLIES         = "order-service.stock.events";
     public static final String QUEUE_PROMOTION_REPLIES     = "order-service.promotion.events";
+    public static final String QUEUE_PAYMENT_REPLIES       = "order-service.payment.events";
     public static final String DLX_NAME                    = "order-service.dlx";
     public static final String DLQ_STOCK_REPLIES           = "order-service.stock.events.dlq";
     public static final String DLQ_PROMOTION_REPLIES       = "order-service.promotion.events.dlq";
+    public static final String DLQ_PAYMENT_REPLIES         = "order-service.payment.events.dlq";
 
 
     // ---- Inbound: stock.events ----
@@ -123,11 +125,59 @@ public class RabbitMQConfig {
                 .with(RoutingKeys.PROMOTION_FAILED);
     }
 
+    @Bean
+    public Binding promotionRevertedBinding(Queue promotionRepliesQueue,
+                                            TopicExchange promotionEventsExchange) {
+        return BindingBuilder.bind(promotionRepliesQueue)
+                .to(promotionEventsExchange)
+                .with(RoutingKeys.PROMOTION_REVERTED);
+    }
+
     // ---- Outbound: promotion.commands ----
 
     @Bean
     public TopicExchange promotionCommandsExchange() {
         return new TopicExchange(RoutingKeys.EXCHANGE_PROMOTION_COMMANDS, true, false);
+    }
+
+
+    // ---- Inbound: payment.events ----
+
+    @Bean
+    public TopicExchange paymentEventsExchange() {
+        return new TopicExchange(RoutingKeys.EXCHANGE_PAYMENT_EVENTS, true, false);
+    }
+
+    @Bean
+    public Queue paymentRepliesQueue() {
+        return QueueBuilder.durable(QUEUE_PAYMENT_REPLIES)
+                .withArgument("x-dead-letter-exchange", DLX_NAME)
+                .withArgument("x-dead-letter-routing-key", QUEUE_PAYMENT_REPLIES)
+                .build();
+    }
+
+    @Bean
+    public Binding paymentInitiatedBinding(Queue paymentRepliesQueue,
+                                           TopicExchange paymentEventsExchange) {
+        return BindingBuilder.bind(paymentRepliesQueue)
+                .to(paymentEventsExchange)
+                .with(RoutingKeys.PAYMENT_INITIATED);
+    }
+
+    @Bean
+    public Binding paymentCompletedBinding(Queue paymentRepliesQueue,
+                                           TopicExchange paymentEventsExchange) {
+        return BindingBuilder.bind(paymentRepliesQueue)
+                .to(paymentEventsExchange)
+                .with(RoutingKeys.PAYMENT_COMPLETED);
+    }
+
+    @Bean
+    public Binding paymentFailedBinding(Queue paymentRepliesQueue,
+                                        TopicExchange paymentEventsExchange) {
+        return BindingBuilder.bind(paymentRepliesQueue)
+                .to(paymentEventsExchange)
+                .with(RoutingKeys.PAYMENT_FAILED);
     }
 
     // ---- DLX + DLQs ----
@@ -161,6 +211,19 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(promotionRepliesDlq)
                 .to(orderServiceDlx)
                 .with(QUEUE_PROMOTION_REPLIES);
+    }
+
+    @Bean
+    public Queue paymentRepliesDlq() {
+        return QueueBuilder.durable(DLQ_PAYMENT_REPLIES).build();
+    }
+
+    @Bean
+    public Binding paymentRepliesDlqBinding(Queue paymentRepliesDlq,
+                                            TopicExchange orderServiceDlx) {
+        return BindingBuilder.bind(paymentRepliesDlq)
+                .to(orderServiceDlx)
+                .with(QUEUE_PAYMENT_REPLIES);
     }
 
     // ---- JSON message conversion ----

@@ -42,6 +42,9 @@ public class OrderLineItem extends Auditable {
     @Column(name = "product_brand")
     private String productBrand;
 
+    @Column(name = "category_name")
+    private String categoryName;
+
     @Column(name = "primary_image_url")
     private String primaryImageUrl;
 

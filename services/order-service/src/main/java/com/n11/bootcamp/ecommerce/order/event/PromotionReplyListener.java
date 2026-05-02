@@ -2,6 +2,7 @@ package com.n11.bootcamp.ecommerce.order.event;
 
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionFailed;
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionApplied;
+import com.n11.bootcamp.ecommerce.events.promotion.PromotionReverted;
 import com.n11.bootcamp.ecommerce.order.config.RabbitMQConfig;
 import com.n11.bootcamp.ecommerce.order.service.SagaService;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +36,12 @@ public class PromotionReplyListener {
         log.info("Received PromotionApplicationFailed sagaId={} reason={}",
                 event.sagaId(), event.reason());
         sagaService.onPromotionApplicationFailed(event);
+    }
+
+    @RabbitHandler
+    public void onPromotionReverted(PromotionReverted event) {
+        log.info("Received PromotionReverted sagaId={} code={}",
+                event.sagaId(), event.code());
+        sagaService.onPromotionReverted(event);
     }
 }

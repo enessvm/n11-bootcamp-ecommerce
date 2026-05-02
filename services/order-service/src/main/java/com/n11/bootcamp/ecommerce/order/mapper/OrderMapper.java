@@ -3,11 +3,13 @@ package com.n11.bootcamp.ecommerce.order.mapper;
 import com.n11.bootcamp.ecommerce.order.client.dto.ProductBatchEntry;
 import com.n11.bootcamp.ecommerce.order.dto.AddressRequest;
 import com.n11.bootcamp.ecommerce.order.dto.AddressResponse;
+import com.n11.bootcamp.ecommerce.order.dto.BuyerResponse;
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequest;
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequestLineItem;
 import com.n11.bootcamp.ecommerce.order.dto.OrderLineItemResponse;
 import com.n11.bootcamp.ecommerce.order.dto.OrderResponse;
 import com.n11.bootcamp.ecommerce.order.entity.Address;
+import com.n11.bootcamp.ecommerce.order.entity.Buyer;
 import com.n11.bootcamp.ecommerce.order.entity.Money;
 import com.n11.bootcamp.ecommerce.order.entity.Order;
 import com.n11.bootcamp.ecommerce.order.entity.OrderLineItem;
@@ -34,6 +36,7 @@ public class OrderMapper {
      */
     public Order toEntity(CreateOrderRequest request,
                           UUID userId,
+                          Buyer buyer,
                           List<ProductBatchEntry> productSnapshots) {
 
         Map<Long, ProductBatchEntry> snapshotsByProductId = productSnapshots.stream()
@@ -46,6 +49,8 @@ public class OrderMapper {
         order.setAppliedCouponCode(request.appliedCouponCode());
         order.setShippingAddress(toAddress(request.shippingAddress()));
         order.setBillingAddress(toAddress(request.billingAddress()));
+        order.setBuyer(buyer);
+        order.setPaymentProvider(request.paymentProvider());
 
         BigDecimal subtotalAmount = BigDecimal.ZERO;
         String currency = null;
@@ -57,6 +62,7 @@ public class OrderMapper {
             line.setProductId(snapshot.id());
             line.setProductName(snapshot.name());
             line.setProductBrand(snapshot.brand());
+            line.setCategoryName(snapshot.categoryName());
             line.setPrimaryImageUrl(snapshot.primaryImageUrl());
             line.setQuantity(requested.quantity());
 
@@ -100,7 +106,24 @@ public class OrderMapper {
                 order.getTotal(),
                 items,
                 order.getCreatedAt(),
-                order.getUpdatedAt()
+                order.getUpdatedAt(),
+                toBuyerResponse(order.getBuyer()),
+                order.getPaymentProvider(),
+                order.getPaymentPageUrl()
+        );
+    }
+
+    private BuyerResponse toBuyerResponse(Buyer buyer) {
+        if (buyer == null) {
+            return null;
+        }
+        return new BuyerResponse(
+                buyer.getFirstName(),
+                buyer.getLastName(),
+                buyer.getEmail(),
+                buyer.getPhoneNumber(),
+                buyer.getIdentityNumber(),
+                buyer.getIpAddress()
         );
     }
 
@@ -110,6 +133,7 @@ public class OrderMapper {
                 item.getProductId(),
                 item.getProductName(),
                 item.getProductBrand(),
+                item.getCategoryName(),
                 item.getPrimaryImageUrl(),
                 item.getQuantity(),
                 item.getUnitListPrice(),

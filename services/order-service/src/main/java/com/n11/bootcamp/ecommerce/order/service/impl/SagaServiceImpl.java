@@ -1,14 +1,21 @@
 package com.n11.bootcamp.ecommerce.order.service.impl;
 
+import com.n11.bootcamp.ecommerce.events.payment.ChargePaymentCommand;
+import com.n11.bootcamp.ecommerce.events.payment.PaymentCompleted;
+import com.n11.bootcamp.ecommerce.events.payment.PaymentFailed;
+import com.n11.bootcamp.ecommerce.events.payment.PaymentInitiated;
 import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionFailed;
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionApplied;
+import com.n11.bootcamp.ecommerce.events.promotion.PromotionReverted;
+import com.n11.bootcamp.ecommerce.events.promotion.RevertPromotionCommand;
 import com.n11.bootcamp.ecommerce.events.stock.*;
 import com.n11.bootcamp.ecommerce.order.entity.Money;
 import com.n11.bootcamp.ecommerce.order.entity.Order;
 import com.n11.bootcamp.ecommerce.order.entity.OrderLineItem;
 import com.n11.bootcamp.ecommerce.order.entity.SagaState;
 import com.n11.bootcamp.ecommerce.order.event.SagaEventPublisher;
+import com.n11.bootcamp.ecommerce.order.mapper.ChargePaymentCommandMapper;
 import com.n11.bootcamp.ecommerce.order.repository.OrderRepository;
 import com.n11.bootcamp.ecommerce.order.service.SagaService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +33,7 @@ public class SagaServiceImpl implements SagaService {
 
     private final OrderRepository orderRepository;
     private final SagaEventPublisher eventPublisher;
+    private final ChargePaymentCommandMapper chargePaymentCommandMapper;
 
     @Override
     @Transactional
@@ -73,8 +81,8 @@ public class SagaServiceImpl implements SagaService {
             eventPublisher.publishApplyPromotion(command);
             // State stays STOCK_RESERVED until promotion reply lands.
         } else {
-            // No coupon — skip promotion, go straight to commit.
-            publishCommitAndAdvance(order);
+            // No coupon — skip promotion, go straight to payment.
+            publishChargeAndAdvance(order);
         }
     }
 
@@ -123,8 +131,8 @@ public class SagaServiceImpl implements SagaService {
                 event.cartDiscountAmount(), event.currency());
 
 
-        // Promotion done — commit stock.
-        publishCommitAndAdvance(order);
+        // Promotion done — request payment.
+        publishChargeAndAdvance(order);
     }
 
     @Override
@@ -145,6 +153,82 @@ public class SagaServiceImpl implements SagaService {
 
         // Compensate: release the stock reservations.
         publishReleaseAndAdvance(order);
+    }
+
+    @Override
+    @Transactional
+    public void onPromotionReverted(PromotionReverted event) {
+        Order order = loadBySagaId(event.sagaId());
+
+        if (order.getSagaState() != SagaState.COMPENSATING_PROMOTION) {
+            log.warn("Ignoring PromotionReverted sagaId={} — order in unexpected state {}",
+                    event.sagaId(), order.getSagaState());
+            return;
+        }
+
+        log.info("Promotion reverted orderId={} sagaId={} code={}",
+                order.getId(), order.getSagaId(), event.code());
+
+        publishReleaseAndAdvance(order);
+    }
+
+    @Override
+    @Transactional
+    public void onPaymentInitiated(PaymentInitiated event) {
+        Order order = loadBySagaId(event.sagaId());
+
+        if (order.getSagaState() != SagaState.PAYMENT_REQUESTED) {
+            log.warn("Ignoring PaymentInitiated sagaId={} — order in unexpected state {}",
+                    event.sagaId(), order.getSagaState());
+            return;
+        }
+
+        order.setPaymentPageUrl(event.paymentPageUrl());
+        order.setSagaState(SagaState.PAYMENT_PENDING_USER);
+        log.info("Saga advanced orderId={} sagaId={} state=PAYMENT_PENDING_USER",
+                order.getId(), order.getSagaId());
+    }
+
+    @Override
+    @Transactional
+    public void onPaymentCompleted(PaymentCompleted event) {
+        Order order = loadBySagaId(event.sagaId());
+
+        SagaState s = order.getSagaState();
+        if (s != SagaState.PAYMENT_PENDING_USER && s != SagaState.PAYMENT_REQUESTED) {
+            log.warn("Ignoring PaymentCompleted sagaId={} — order in unexpected state {}",
+                    event.sagaId(), s);
+            return;
+        }
+
+        log.info("Payment completed orderId={} sagaId={} providerPaymentId={}",
+                order.getId(), order.getSagaId(), event.providerPaymentId());
+
+        publishCommitAndAdvance(order);
+    }
+
+    @Override
+    @Transactional
+    public void onPaymentFailed(PaymentFailed event) {
+        Order order = loadBySagaId(event.sagaId());
+
+        SagaState s = order.getSagaState();
+        if (s != SagaState.PAYMENT_REQUESTED && s != SagaState.PAYMENT_PENDING_USER) {
+            log.warn("Ignoring PaymentFailed sagaId={} — order in unexpected state {}",
+                    event.sagaId(), s);
+            return;
+        }
+
+        order.setSagaState(SagaState.PAYMENT_FAILED);
+        order.setFailureReason("Payment " + event.reason() + ": " + event.message());
+        log.info("Saga failed orderId={} sagaId={} reason={}",
+                order.getId(), order.getSagaId(), order.getFailureReason());
+
+        if (hasCoupon(order)) {
+            publishRevertAndAdvance(order);
+        } else {
+            publishReleaseAndAdvance(order);
+        }
     }
 
     @Override
@@ -201,6 +285,15 @@ public class SagaServiceImpl implements SagaService {
     }
 
     // ---- Helpers ----
+    private void publishChargeAndAdvance(Order order) {
+        order.setSagaState(SagaState.PAYMENT_REQUESTED);
+        ChargePaymentCommand command = chargePaymentCommandMapper.toCommand(order);
+        eventPublisher.publishChargePayment(command);
+        log.info("Saga advanced orderId={} sagaId={} state=PAYMENT_REQUESTED",
+                order.getId(), order.getSagaId());
+    }
+
+    // Wired in 1d-ii-D when PaymentCompleted handler enters COMMIT_REQUESTED.
     private void publishCommitAndAdvance(Order order) {
         order.setSagaState(SagaState.COMMIT_REQUESTED);
         CommitStockCommand command = new CommitStockCommand(
@@ -211,6 +304,18 @@ public class SagaServiceImpl implements SagaService {
         );
         eventPublisher.publishCommitStock(command);
         log.info("Saga advanced orderId={} sagaId={} state=COMMIT_REQUESTED",
+                order.getId(), order.getSagaId());
+    }
+
+    private void publishRevertAndAdvance(Order order) {
+        order.setSagaState(SagaState.COMPENSATING_PROMOTION);
+        RevertPromotionCommand command = new RevertPromotionCommand(
+                UUID.randomUUID(),
+                Instant.now(),
+                order.getSagaId()
+        );
+        eventPublisher.publishRevertPromotion(command);
+        log.info("Saga advanced orderId={} sagaId={} state=COMPENSATING_PROMOTION",
                 order.getId(), order.getSagaId());
     }
 

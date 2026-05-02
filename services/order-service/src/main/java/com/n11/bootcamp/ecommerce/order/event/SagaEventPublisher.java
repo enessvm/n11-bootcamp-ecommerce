@@ -1,7 +1,9 @@
 package com.n11.bootcamp.ecommerce.order.event;
 
 import com.n11.bootcamp.ecommerce.events.RoutingKeys;
+import com.n11.bootcamp.ecommerce.events.payment.ChargePaymentCommand;
 import com.n11.bootcamp.ecommerce.events.promotion.ApplyPromotionCommand;
+import com.n11.bootcamp.ecommerce.events.promotion.RevertPromotionCommand;
 import com.n11.bootcamp.ecommerce.events.stock.CommitStockCommand;
 import com.n11.bootcamp.ecommerce.events.stock.ReleaseStockCommand;
 import com.n11.bootcamp.ecommerce.events.stock.ReserveStockCommand;
@@ -40,6 +42,15 @@ public class SagaEventPublisher {
                 command.sagaId(), command.orderId(), command.code());
     }
 
+    public void publishRevertPromotion(RevertPromotionCommand command) {
+        rabbitTemplate.convertAndSend(
+                RoutingKeys.EXCHANGE_PROMOTION_COMMANDS,
+                RoutingKeys.PROMOTION_REVERT,
+                command
+        );
+        log.info("Published RevertPromotionCommand sagaId={}", command.sagaId());
+    }
+
     public void publishCommitStock(CommitStockCommand command) {
         rabbitTemplate.convertAndSend(
                 RoutingKeys.EXCHANGE_STOCK_COMMANDS,
@@ -57,6 +68,16 @@ public class SagaEventPublisher {
                 command
         );
         log.info("Published ReleaseStockCommand sagaId={} orderId={}",
+                command.sagaId(), command.orderId());
+    }
+
+    public void publishChargePayment(ChargePaymentCommand command) {
+        rabbitTemplate.convertAndSend(
+                RoutingKeys.EXCHANGE_PAYMENT_COMMANDS,
+                RoutingKeys.PAYMENT_CHARGE,
+                command
+        );
+        log.info("Published ChargePaymentCommand sagaId={} orderId={}",
                 command.sagaId(), command.orderId());
     }
 

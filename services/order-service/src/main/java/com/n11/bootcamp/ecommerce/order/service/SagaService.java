@@ -1,7 +1,11 @@
 package com.n11.bootcamp.ecommerce.order.service;
 
+import com.n11.bootcamp.ecommerce.events.payment.PaymentCompleted;
+import com.n11.bootcamp.ecommerce.events.payment.PaymentFailed;
+import com.n11.bootcamp.ecommerce.events.payment.PaymentInitiated;
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionFailed;
 import com.n11.bootcamp.ecommerce.events.promotion.PromotionApplied;
+import com.n11.bootcamp.ecommerce.events.promotion.PromotionReverted;
 import com.n11.bootcamp.ecommerce.events.stock.StockCommitFailed;
 import com.n11.bootcamp.ecommerce.events.stock.StockCommitted;
 import com.n11.bootcamp.ecommerce.events.stock.StockReleased;
@@ -20,6 +24,14 @@ public interface SagaService {
     void onPromotionApplied(PromotionApplied event);
 
     void onPromotionApplicationFailed(PromotionFailed event);
+
+    void onPromotionReverted(PromotionReverted event);
+
+    void onPaymentInitiated(PaymentInitiated event);
+
+    void onPaymentCompleted(PaymentCompleted event);
+
+    void onPaymentFailed(PaymentFailed event);
 
     void onStockCommitted(StockCommitted event);
 

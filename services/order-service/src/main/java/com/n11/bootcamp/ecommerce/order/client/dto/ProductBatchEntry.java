@@ -6,6 +6,7 @@ public record ProductBatchEntry(
         Long id,
         String name,
         String brand,
+        String categoryName,
         String primaryImageUrl,
         Money listPrice
 ) {}
