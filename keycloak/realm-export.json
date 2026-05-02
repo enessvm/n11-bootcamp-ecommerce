@@ -82,7 +82,7 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
-      "fullScopeAllowed": false
+      "fullScopeAllowed": true
     }
   ],
 
