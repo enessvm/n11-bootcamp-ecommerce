@@ -13,7 +13,8 @@ public final class RoutingKeys {
     public static final String EXCHANGE_STOCK_COMMANDS = "stock.commands";
     public static final String EXCHANGE_PROMOTION_COMMANDS  = "promotion.commands";
     public static final String EXCHANGE_PROMOTION_EVENTS    = "promotion.events";
-    public static final String EXCHANGE_ORDER_EVENTS   = "order.events";
+    public static final String EXCHANGE_PAYMENT_COMMANDS    = "payment.commands";
+    public static final String EXCHANGE_PAYMENT_EVENTS      = "payment.events";
 
 
 
@@ -42,4 +43,14 @@ public final class RoutingKeys {
     // ---- promotion.events ----
     public static final String PROMOTION_APPLIED  = "promotion.applied";
     public static final String PROMOTION_FAILED   = "promotion.failed";
+
+
+
+    // ---- payment.commands ----
+    public static final String PAYMENT_CHARGE = "payment.commands.charge";
+
+    // ---- payment.events ----
+    public static final String PAYMENT_INITIATED = "payment.initiated";
+    public static final String PAYMENT_COMPLETED = "payment.completed";
+    public static final String PAYMENT_FAILED    = "payment.failed";
 }

@@ -34,33 +34,60 @@ public class PaymentAttempt extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Saga identifier from order-service.
-     */
     @Column(name = "saga_id", nullable = false)
     private UUID sagaId;
 
     @Column(name = "order_id", nullable = false)
     private Long orderId;
 
-    @Embedded
-    @AttributeOverride(name = "amount",   column = @Column(name = "amount_amount",   nullable = false, precision = 10, scale = 2))
-    @AttributeOverride(name = "currency", column = @Column(name = "amount_currency", nullable = false, length = 3))
-    private Money amount;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "provider", nullable = false)
-    private PaymentProvider provider;
+    private String provider;
+
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "amount"))
+    @AttributeOverride(name = "currency", column = @Column(name = "currency"))
+    private Money amount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private PaymentStatus status;
 
-    /** Provider's transaction reference. Null on failure. */
-    @Column(name = "provider_txn_id")
-    private String providerTxnId;
+    @Column(name = "checkout_token")
+    private String checkoutToken;
 
-    /** Reason text from the provider. Null on success. */
+    @Column(name = "payment_page_url")
+    private String paymentPageUrl;
+
+    @Column(name = "provider_payment_id")
+    private String providerPaymentId;
+
     @Column(name = "failure_reason")
     private String failureReason;
+
+    public static PaymentAttempt create(UUID sagaId,
+                                        long orderId,
+                                        String provider,
+                                        Money amount,
+                                        String checkoutToken,
+                                        String paymentPageUrl) {
+        PaymentAttempt attempt = new PaymentAttempt();
+        attempt.sagaId = sagaId;
+        attempt.orderId = orderId;
+        attempt.provider = provider;
+        attempt.amount = amount;
+        attempt.status = PaymentStatus.INITIATED;
+        attempt.checkoutToken = checkoutToken;
+        attempt.paymentPageUrl = paymentPageUrl;
+        return attempt;
+    }
+
+    public void markSucceeded(String providerPaymentId) {
+        this.status = PaymentStatus.SUCCEEDED;
+        this.providerPaymentId = providerPaymentId;
+    }
+
+    public void markFailed(String failureReason) {
+        this.status = PaymentStatus.FAILED;
+        this.failureReason = failureReason;
+    }
 }

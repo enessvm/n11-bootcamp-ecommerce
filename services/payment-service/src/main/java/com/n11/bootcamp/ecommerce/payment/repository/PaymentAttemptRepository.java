@@ -9,4 +9,8 @@ import java.util.UUID;
 public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt, Long> {
 
     Optional<PaymentAttempt> findBySagaId(UUID sagaId);
+
+    boolean existsBySagaId(UUID sagaId);
+
+    Optional<PaymentAttempt> findByCheckoutToken(String checkoutToken);
 }
