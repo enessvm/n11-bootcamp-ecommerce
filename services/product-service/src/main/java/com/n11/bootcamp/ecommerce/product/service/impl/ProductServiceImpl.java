@@ -135,9 +135,7 @@ public class ProductServiceImpl implements ProductService {
                 productPage.getTotalPages(),
                 productPage.isFirst(),
                 productPage.isLast(),
-                finalStockUnavailable,
-                true,
-                true
+                finalStockUnavailable
         );
     }
 

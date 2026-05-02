@@ -10,12 +10,5 @@ public record ProductListEntry(
         Long categoryId,
         String primaryImageUrl,
         Money listPrice,
-
-        // TODO:  discount
-        // Money effectivePrice,
-        // ProductDetailResponse.DiscountBadge discountBadge,
         StockStatus stockStatus
-        // TODO: review
-        // BigDecimal averageRating,
-        // Integer reviewCount
 ) {}

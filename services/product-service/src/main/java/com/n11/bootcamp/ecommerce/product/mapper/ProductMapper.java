@@ -98,9 +98,7 @@ public class ProductMapper {
                 stockStatus,
                 p.getCreatedAt(),
                 p.getUpdatedAt(),
-                stockUnavailable,
-                true,
-                true
+                stockUnavailable
         );
     }
     public ProductListEntry toListEntry(Product p,

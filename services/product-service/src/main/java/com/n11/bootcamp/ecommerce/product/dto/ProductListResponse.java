@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * Paginated listing response for {@code GET /products}. Per-endpoint envelope
- * with degradation flags
+ * with degradation flags.
  */
 public record ProductListResponse(
         List<ProductListEntry> content,
@@ -14,9 +14,5 @@ public record ProductListResponse(
         int totalPages,
         boolean first,
         boolean last,
-
-        // Per-endpoint degradation flags
-        boolean stockUnavailable,
-        boolean discountsUnavailable,
-        boolean reviewsUnavailable
+        boolean stockUnavailable
 ) {}
