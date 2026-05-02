@@ -27,7 +27,8 @@ public record ChargePaymentCommand(
         UUID sagaId,
         Long orderId,
         String provider,
-        BigDecimal amount,
+        BigDecimal amount, // total after sun
+        BigDecimal paidAmount, // total after discount
         String currency,
         Customer customer,
         Address shippingAddress,

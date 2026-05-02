@@ -30,7 +30,7 @@ public class IyzicoRequestMapper {
 
         // Money
         request.setPrice(command.amount());
-        request.setPaidPrice(command.amount());
+        request.setPaidPrice(command.paidAmount());
         request.setCurrency(mapCurrency(command.currency()));
 
         // Hosted-checkout config

@@ -53,7 +53,20 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // Initialize provider session.
-        var gateway = resolveGateway(command.provider());
+        PaymentGateway gateway;
+        try {
+            gateway = resolveGateway(command.provider());
+        } catch (UnsupportedPaymentProviderException e) {
+            log.warn("Unknown provider sagaId={} provider={}",
+                    command.sagaId(), command.provider());
+            eventPublisher.publishPaymentFailed(
+                    command.sagaId(),
+                    -1L,
+                    PaymentFailed.Reason.INITIALIZE_FAILED,
+                    "Unsupported payment provider: " + command.provider()
+            );
+            return;
+        }
         var result = gateway.initiate(command);
 
         if (!result.success()) {
