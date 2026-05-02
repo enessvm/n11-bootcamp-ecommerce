@@ -17,7 +17,7 @@ public class KeycloakAdminConfig {
     private final KeycloakProperties properties;
 
     @Bean
-    public Keycloak keycloakAdminClient() {
+    public Keycloak adminKeycloak() {
         KeycloakProperties.Admin admin = properties.getAdmin();
         return KeycloakBuilder.builder()
                 .serverUrl(admin.getServerUrl())
