@@ -7,6 +7,5 @@ public record UserProfileResponse(
         UUID keycloakSub,
         String displayName,
         String phoneNumber,
-        Instant createdAt,
-        Instant updatedAt
+        String identityNumber
 ) {}

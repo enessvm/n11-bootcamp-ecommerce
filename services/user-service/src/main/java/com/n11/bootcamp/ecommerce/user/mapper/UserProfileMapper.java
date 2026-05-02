@@ -12,8 +12,7 @@ public class UserProfileMapper {
                 profile.getKeycloakSub(),
                 profile.getDisplayName(),
                 profile.getPhoneNumber(),
-                profile.getCreatedAt(),
-                profile.getUpdatedAt()
+                profile.getIdentityNumber()
         );
     }
 }

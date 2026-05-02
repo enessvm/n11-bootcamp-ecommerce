@@ -27,4 +27,7 @@ public class UserProfile extends Auditable {
 
     @Column(name = "phone_number")
     private String phoneNumber;
+
+    @Column(name = "identity_number")
+    private String identityNumber;
 }
