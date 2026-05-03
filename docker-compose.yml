@@ -56,6 +56,166 @@ services:
         condition: service_healthy
     networks: [ecommerce-net]
 
+  eureka-server:
+    image: eureka-server
+    container_name: eureka-server
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [ecommerce-net]
+
+  config-server:
+    image: config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [ecommerce-net]
+
+  api-gateway:
+    image: api-gateway
+    container_name: api-gateway
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: api-gateway
+      FRONTEND_ORIGIN: http://localhost:5173
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
+  product-service:
+    image: product-service
+    container_name: product-service
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: product-service
+      DB_URL: jdbc:postgresql://postgres:5432/product_db
+      RABBITMQ_HOST: rabbitmq
+    ports: ["8082:8082"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
+  stock-service:
+    image: stock-service
+    container_name: stock-service
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: stock-service
+      DB_URL: jdbc:postgresql://postgres:5432/stock_db
+      RABBITMQ_HOST: rabbitmq
+    ports: ["8083:8083"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
+  user-service:
+    image: user-service
+    container_name: user-service
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: user-service
+      DB_URL: jdbc:postgresql://postgres:5432/user_db
+      RABBITMQ_HOST: rabbitmq
+    ports: ["8084:8084"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
+  promotion-service:
+    image: promotion-service
+    container_name: promotion-service
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: promotion-service
+      DB_URL: jdbc:postgresql://postgres:5432/promotion_db
+      RABBITMQ_HOST: rabbitmq
+    ports: ["8085:8085"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
+  payment-service:
+    image: payment-service
+    container_name: payment-service
+    env_file: .env
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: payment-service
+      DB_URL: jdbc:postgresql://postgres:5432/payment_db
+      RABBITMQ_HOST: rabbitmq
+    ports: ["8086:8086"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
+  order-service:
+    image: order-service
+    container_name: order-service
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: order-service
+      DB_URL: jdbc:postgresql://postgres:5432/order_db
+      RABBITMQ_HOST: rabbitmq
+    ports: ["8087:8087"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
+  cart-service:
+    image: cart-service
+    container_name: cart-service
+    environment:
+      CONFIG_URI: http://config-server:8888
+      EUREKA_URI: http://eureka-server:8761/eureka
+      EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: cart-service
+      DB_URL: jdbc:postgresql://postgres:5432/cart_db
+    ports: ["8088:8088"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      config-server: { condition: service_healthy }
+    networks: [ecommerce-net]
+
 
 volumes:
   postgres-data:
