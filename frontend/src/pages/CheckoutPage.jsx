@@ -140,25 +140,33 @@ function CheckoutContent() {
     }
   }, [pendingOrder, navigate]);
 
-  // 3. Watch the popup; if user closes it before payment completes, reset.
+    // 3. Watch the popup; if user closes it before payment completes, reset.
   useEffect(() => {
     if (pendingOrderId == null) return;
     const popup = popupRef.current;
     if (!popup) return;
+
+    let popupReturned = false;
+    const channel = new BroadcastChannel('payment-flow');
+    channel.onmessage = (e) => {
+      if (e.data?.type === 'popup-returned') popupReturned = true;
+    };
+
     const interval = setInterval(() => {
       if (popup.closed) {
         clearInterval(interval);
-        // If saga already terminal, the other effect handled it. Otherwise abort.
-        if (
-          !pendingOrder ||
-          !isTerminalSagaState(pendingOrder.sagaState)
-        ) {
+        if (popupReturned) return; // polling will catch terminal state
+        if (!pendingOrder || !isTerminalSagaState(pendingOrder.sagaState)) {
           toast.info('Payment window closed. You can try again.');
           resetPaymentFlow();
         }
       }
     }, 500);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      channel.close();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingOrderId, pendingOrder?.sagaState]);
 
