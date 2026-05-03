@@ -35,12 +35,18 @@ spring:
               uri: lb://cart-service
               predicates:
                 - Path=/cart/**
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/payments/**
 
           globalcors:
             cors-configurations:
               '[/**]':
                 allowed-origins:
                   - ${FRONTEND_ORIGIN:http://localhost:5173}
+                  - https://sandbox-api.iyzipay.com
+                  - https://api.iyzipay.com
                 allowed-methods:
                   - GET
                   - POST

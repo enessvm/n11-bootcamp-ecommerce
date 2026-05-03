@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/ecommerce
+
+jobs:
+  release:
+    name: Build, Push & Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # backend
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Make Maven wrapper executable
+        run: chmod +x mvnw
+
+      - name: Build all modules
+        run: ./mvnw clean install -DskipTests --no-transfer-progress
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend images via Jib
+        env:
+          IMAGE_TAG: ${{ github.ref_name }}
+        run: |
+          SERVICES=(
+            eureka-server config-server api-gateway
+            user-service product-service stock-service
+            promotion-service payment-service order-service cart-service
+          )
+          for SERVICE in "${SERVICES[@]}"; do
+            echo "▶ $SERVICE → ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/$SERVICE:$IMAGE_TAG"
+            ./mvnw jib:build \
+              -pl ":$SERVICE" \
+              -Djib.to.image="${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/$SERVICE:$IMAGE_TAG" \
+              -Djib.to.tags="latest" \
+              -Djib.to.auth.username="${{ github.actor }}" \
+              -Djib.to.auth.password="${{ secrets.GITHUB_TOKEN }}" \
+              --no-transfer-progress
+          done
+
+      # frontend
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          # /api is proxied to api-gateway by nginx
+          build-args: VITE_API_BASE_URL=/api
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/frontend:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/frontend:latest
+
+      - name: Generate docker-compose with pinned image tags
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          ECOMMERCE_VERSION: ${{ github.ref_name }}
+        # envsubst only replaces the three build-time vars; runtime ${DB_PASSWORD} etc. are untouched
+        run: |
+          envsubst '${REGISTRY} ${IMAGE_PREFIX} ${ECOMMERCE_VERSION}' \
+            < docker-compose.release.yml \
+            > docker-compose.pinned.yml
+
+      - name: Create release bundle
+        run: |
+          mkdir -p release-bundle
+          cp docker-compose.pinned.yml  release-bundle/docker-compose.yml
+          cp .env.example               release-bundle/.env.example
+          cp setup.sh                   release-bundle/setup.sh
+          cp setup.ps1                  release-bundle/setup.ps1
+          mkdir -p release-bundle/scripts release-bundle/keycloak
+          cp scripts/init.sql                   release-bundle/scripts/init.sql
+          cp keycloak/realm-export.json         release-bundle/keycloak/realm-export.json
+          chmod +x release-bundle/setup.sh
+          cd release-bundle && zip -r ../ecommerce-${{ github.ref_name }}.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Ecommerce Platform ${{ github.ref_name }}"
+          body: |
+            1. Download and unzip `ecommerce-${{ github.ref_name }}.zip`
+            2. Copy `.env.example` to `.env` and fill in your secrets
+            3. Run setup
+
+            > **Iyzico callback URL**: Set `IYZICO_CALLBACK_URL` in `.env` to
+            > `http://YOUR_SERVER_IP_OR_DOMAIN/api/payments/callback`
+          files: ecommerce-${{ github.ref_name }}.zip
+          fail_on_unmatched_files: true
