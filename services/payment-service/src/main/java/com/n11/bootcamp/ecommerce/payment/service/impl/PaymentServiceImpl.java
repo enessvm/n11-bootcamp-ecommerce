@@ -89,7 +89,8 @@ public class PaymentServiceImpl implements PaymentService {
                 command.provider(),
                 new Money(command.amount(), command.currency()),
                 result.providerToken(),
-                result.paymentPageUrl()
+                result.paymentPageUrl(),
+                command.returnUrl()
         );
         attempt = attemptRepository.save(attempt);
 
@@ -104,7 +105,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public void handleCallback(String providerName, String providerToken) {
+    public String handleCallback(String providerName, String providerToken) {
         var attempt = attemptRepository.findByCheckoutToken(providerToken).orElse(null);
 
         if (attempt == null) {
@@ -114,11 +115,13 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalStateException("Unknown checkoutToken: " + providerToken);
         }
 
+        String returnUrl = attempt.getReturnUrl();
+
         // already terminal = no-op (provider may retry callbacks).
         if (attempt.getStatus() != PaymentStatus.INITIATED) {
             log.info("Callback ignored for already-terminal attempt id={} status={}",
                     attempt.getId(), attempt.getStatus());
-            return;
+            return returnUrl;
         }
 
         var gateway = resolveGateway(providerName);
@@ -144,6 +147,8 @@ public class PaymentServiceImpl implements PaymentService {
             log.info("Payment failed sagaId={} paymentAttemptId={} message={}",
                     attempt.getSagaId(), attempt.getId(), result.errorMessage());
         }
+
+        return returnUrl;
     }
 
     // ---- Helpers ----

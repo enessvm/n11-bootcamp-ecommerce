@@ -23,5 +23,8 @@ public record CreateOrderRequest(
         AddressRequest billingAddress,
 
         @NotBlank @Size(max = 50)
-        String paymentProvider
+        String paymentProvider,
+
+        @NotBlank @Size(max = 500)
+        String returnUrl
 ) {}

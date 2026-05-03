@@ -58,6 +58,9 @@ public class PaymentAttempt extends Auditable {
     @Column(name = "payment_page_url")
     private String paymentPageUrl;
 
+    @Column(name = "return_url", length = 500)
+    private String returnUrl;
+
     @Column(name = "provider_payment_id")
     private String providerPaymentId;
 
@@ -69,7 +72,8 @@ public class PaymentAttempt extends Auditable {
                                         String provider,
                                         Money amount,
                                         String checkoutToken,
-                                        String paymentPageUrl) {
+                                        String paymentPageUrl,
+                                        String returnUrl) {
         PaymentAttempt attempt = new PaymentAttempt();
         attempt.sagaId = sagaId;
         attempt.orderId = orderId;
@@ -78,6 +82,7 @@ public class PaymentAttempt extends Auditable {
         attempt.status = PaymentStatus.INITIATED;
         attempt.checkoutToken = checkoutToken;
         attempt.paymentPageUrl = paymentPageUrl;
+        attempt.returnUrl = returnUrl;
         return attempt;
     }
 

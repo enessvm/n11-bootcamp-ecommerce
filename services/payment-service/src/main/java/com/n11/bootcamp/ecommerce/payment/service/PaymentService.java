@@ -6,5 +6,5 @@ public interface PaymentService {
 
     void consumeChargeCommand(ChargePaymentCommand command);
 
-    void handleCallback(String providerName, String providerToken);
+    String handleCallback(String providerName, String providerToken);
 }

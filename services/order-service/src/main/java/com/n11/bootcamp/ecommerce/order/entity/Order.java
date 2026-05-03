@@ -104,6 +104,9 @@ public class Order extends Auditable {
     @Column(name = "payment_page_url")
     private String paymentPageUrl;
 
+    @Column(name = "return_url", length = 500)
+    private String returnUrl;
+
     @Embedded
     @AttributeOverride(name = "amount",   column = @Column(name = "subtotal_amount"))
     @AttributeOverride(name = "currency", column = @Column(name = "subtotal_currency"))

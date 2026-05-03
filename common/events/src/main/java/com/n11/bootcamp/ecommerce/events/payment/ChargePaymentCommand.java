@@ -33,7 +33,8 @@ public record ChargePaymentCommand(
         Customer customer,
         Address shippingAddress,
         Address billingAddress,
-        List<LineItem> lineItems
+        List<LineItem> lineItems,
+        String returnUrl
 ) {
 
     /**

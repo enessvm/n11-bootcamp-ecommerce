@@ -32,7 +32,8 @@ public class ChargePaymentCommandMapper {
                 toCustomer(order),
                 toCommandAddress(order.getShippingAddress()),
                 toCommandAddress(order.getBillingAddress()),
-                toLineItems(order.getLineItems())
+                toLineItems(order.getLineItems()),
+                order.getReturnUrl()
         );
     }
 
