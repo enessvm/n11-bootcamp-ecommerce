@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate} from 'react-router-dom';
 import {
   CheckCircle2,
   ImageOff,
@@ -44,13 +44,6 @@ export function CheckoutPage() {
   }
 
   return <CheckoutContent />;
-}
-
-function Navigate({ to, navigate }) {
-  useEffect(() => {
-    navigate(to, { replace: true });
-  }, [navigate, to]);
-  return null;
 }
 
 function CheckoutContent() {

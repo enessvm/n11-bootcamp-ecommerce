@@ -39,7 +39,7 @@ export function ProductDetailPage() {
 
   if (!product) return null;
 
-  const images = product.images && product.images.length > 0 ? product.images : [];
+  const images = (product.images ?? []).map((img) => img.url).filter(Boolean);
   const breadcrumbSegments = [
     ...(product.categoryPath ?? []).map((entry) => ({
       label: entry.name,
