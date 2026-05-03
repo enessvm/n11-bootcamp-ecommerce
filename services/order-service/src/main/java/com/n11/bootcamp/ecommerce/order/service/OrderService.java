@@ -1,6 +1,7 @@
 package com.n11.bootcamp.ecommerce.order.service;
 
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequest;
+import com.n11.bootcamp.ecommerce.order.dto.OrderListResponse;
 import com.n11.bootcamp.ecommerce.order.dto.OrderResponse;
 import org.springframework.security.oauth2.jwt.Jwt;
 
@@ -11,4 +12,6 @@ public interface OrderService {
     OrderResponse createOrder(Jwt jwt, String ipAddress, CreateOrderRequest request);
 
     OrderResponse getById(Long id, UUID userId);
+
+    OrderListResponse listOrdersForUser(UUID userId, int page, int size);
 }

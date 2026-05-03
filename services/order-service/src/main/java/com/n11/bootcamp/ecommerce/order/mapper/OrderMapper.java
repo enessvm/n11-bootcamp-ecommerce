@@ -7,6 +7,7 @@ import com.n11.bootcamp.ecommerce.order.dto.BuyerResponse;
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequest;
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequestLineItem;
 import com.n11.bootcamp.ecommerce.order.dto.OrderLineItemResponse;
+import com.n11.bootcamp.ecommerce.order.dto.OrderListEntry;
 import com.n11.bootcamp.ecommerce.order.dto.OrderResponse;
 import com.n11.bootcamp.ecommerce.order.entity.Address;
 import com.n11.bootcamp.ecommerce.order.entity.Buyer;
@@ -51,6 +52,7 @@ public class OrderMapper {
         order.setBillingAddress(toAddress(request.billingAddress()));
         order.setBuyer(buyer);
         order.setPaymentProvider(request.paymentProvider());
+        order.setReturnUrl(request.returnUrl());
 
         BigDecimal subtotalAmount = BigDecimal.ZERO;
         String currency = null;
@@ -85,6 +87,20 @@ public class OrderMapper {
         order.setTotal(new Money(subtotalAmount, currency));
 
         return order;
+    }
+
+    public OrderListEntry toListEntry(Order order) {
+        List<OrderLineItem> items = order.getLineItems();
+        OrderLineItem first = items.isEmpty() ? null : items.get(0);
+        return new OrderListEntry(
+                order.getId(),
+                order.getSagaState(),
+                order.getTotal(),
+                items.size(),
+                first != null ? first.getProductName() : null,
+                first != null ? first.getPrimaryImageUrl() : null,
+                order.getCreatedAt()
+        );
     }
 
     public OrderResponse toResponse(Order order) {

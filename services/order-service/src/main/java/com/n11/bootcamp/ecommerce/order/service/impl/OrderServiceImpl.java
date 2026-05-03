@@ -8,8 +8,11 @@ import com.n11.bootcamp.ecommerce.order.client.dto.ProductBatchResponse;
 import com.n11.bootcamp.ecommerce.order.client.dto.UserProfileRequest;
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequest;
 import com.n11.bootcamp.ecommerce.order.dto.CreateOrderRequestLineItem;
+import com.n11.bootcamp.ecommerce.order.dto.OrderListEntry;
+import com.n11.bootcamp.ecommerce.order.dto.OrderListResponse;
 import com.n11.bootcamp.ecommerce.order.dto.OrderResponse;
 import com.n11.bootcamp.ecommerce.order.entity.Buyer;
+import com.n11.bootcamp.ecommerce.order.entity.SagaState;
 import com.n11.bootcamp.ecommerce.order.entity.Order;
 import com.n11.bootcamp.ecommerce.order.exception.OrderNotFoundException;
 import com.n11.bootcamp.ecommerce.order.exception.ProfileIncompleteException;
@@ -19,6 +22,10 @@ import com.n11.bootcamp.ecommerce.order.service.OrderService;
 import com.n11.bootcamp.ecommerce.web.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -111,5 +118,30 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return orderMapper.toResponse(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderListResponse listOrdersForUser(UUID userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Order> orderPage = orderRepository
+                .findByUserIdAndSagaState(userId, SagaState.COMPLETED, pageable);
+
+        // later add in delivery etc
+        List<OrderListEntry> entries = orderPage.getContent().stream()
+                .map(orderMapper::toListEntry)
+                .toList();
+
+        return new OrderListResponse(
+                entries,
+                orderPage.getNumber(),
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages(),
+                orderPage.isFirst(),
+                orderPage.isLast()
+        );
     }
 }
