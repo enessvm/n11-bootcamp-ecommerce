@@ -6,5 +6,5 @@ import java.util.List;
 
 public record ProductBatchRequest(
         @NotEmpty
-        List<Long> productIds
+        List<Long> ids
 ) {}
